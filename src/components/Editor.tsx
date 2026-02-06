@@ -1,12 +1,14 @@
 import { useRef, useEffect, useCallback } from "react";
 import MonacoEditor, { OnMount, BeforeMount } from "@monaco-editor/react";
-import type { editor } from "monaco-editor";
+import type { editor, MarkerSeverity } from "monaco-editor";
 import { useAppStore } from "@/store/app-store";
 import { useSettingsStore } from "@/store/settings-store";
 import { registerLmlLanguage } from "@/lib/lml-language";
+import { validateLml, ValidationMessage } from "@/lib/lml-validator";
 
 // Global editor reference for external access (symbol insertion, etc.)
 let globalEditorRef: editor.IStandaloneCodeEditor | null = null;
+let globalMonacoRef: typeof import("monaco-editor") | null = null;
 
 export function getEditorInstance() {
   return globalEditorRef;
@@ -47,10 +49,35 @@ export function Editor() {
     registerLmlLanguage(monaco);
   };
 
+  // Run validation on content
+  const runValidation = useCallback((content: string, monaco: typeof import("monaco-editor"), model: editor.ITextModel) => {
+    const result = validateLml(content);
+
+    const severityMap: Record<string, MarkerSeverity> = {
+      error: monaco.MarkerSeverity.Error,
+      warning: monaco.MarkerSeverity.Warning,
+      info: monaco.MarkerSeverity.Info,
+    };
+
+    const markers = result.messages.map((msg) => ({
+      severity: severityMap[msg.severity] || monaco.MarkerSeverity.Info,
+      startLineNumber: msg.line,
+      startColumn: msg.column,
+      endLineNumber: msg.line,
+      endColumn: msg.endColumn || msg.column + 1,
+      message: msg.message,
+      source: "lml",
+      code: msg.code,
+    }));
+
+    monaco.editor.setModelMarkers(model, "lml-validator", markers);
+  }, []);
+
   // Setup editor after mount
   const handleMount: OnMount = (editor, monaco) => {
     editorRef.current = editor;
     globalEditorRef = editor;
+    globalMonacoRef = monaco;
 
     // Track cursor position
     editor.onDidChangeCursorPosition((e) => {
@@ -66,6 +93,21 @@ export function Editor() {
         setScrollPercent(percent);
       }
     });
+
+    // Run initial validation
+    const model = editor.getModel();
+    if (model) {
+      runValidation(model.getValue(), monaco, model);
+
+      // Validate on content change (debounced)
+      let validationTimeout: ReturnType<typeof setTimeout>;
+      model.onDidChangeContent(() => {
+        clearTimeout(validationTimeout);
+        validationTimeout = setTimeout(() => {
+          runValidation(model.getValue(), monaco, model);
+        }, 500);
+      });
+    }
 
     // Focus editor
     editor.focus();
