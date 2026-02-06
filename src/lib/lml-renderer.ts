@@ -170,6 +170,22 @@ function detectBlockStart(line: string): BlockStart | null {
     return { type: "footnote", params: id };
   }
 
+  // Alert/callout blocks
+  if (line.startsWith("@alert")) {
+    const type = line.match(/\((\w+)\)/)?.[1] || "info";
+    return { type: "alert", params: type };
+  }
+
+  // Centered text block
+  if (line.startsWith("@center")) {
+    return { type: "center" };
+  }
+
+  // Epigraph (quotation at start of chapter)
+  if (line.startsWith("@epigraph")) {
+    return { type: "epigraph" };
+  }
+
   // Raw LaTeX passthrough block
   if (line === "@latex") {
     return { type: "latex" };
@@ -221,6 +237,12 @@ function renderBlock(type: string | null, lines: string[]): string {
       return renderToc();
     case "footnote":
       return renderFootnote(lines);
+    case "alert":
+      return renderAlert(lines);
+    case "center":
+      return renderCenter(lines);
+    case "epigraph":
+      return renderEpigraph(lines);
     case "hr":
       return "<hr />";
     default:
@@ -615,6 +637,62 @@ function generateRandomSentence(): string {
   }
   words[0] = words[0].charAt(0).toUpperCase() + words[0].slice(1);
   return words.join(" ") + ".";
+}
+
+/**
+ * Render alert/callout block
+ */
+function renderAlert(lines: string[]): string {
+  const type = lines[0] || "info";
+  const content = lines.slice(1).join(" ").trim();
+
+  const icons: Record<string, string> = {
+    info: "ℹ️",
+    warning: "⚠️",
+    danger: "🚨",
+    success: "✅",
+    tip: "💡",
+    note: "📝",
+  };
+
+  const icon = icons[type] || icons.info;
+  const title = type.charAt(0).toUpperCase() + type.slice(1);
+
+  return `<div class="alert alert-${type}">
+    <div class="alert-header"><span class="alert-icon">${icon}</span> <strong>${title}</strong></div>
+    <div class="alert-content">${formatInline(content)}</div>
+  </div>`;
+}
+
+/**
+ * Render centered text block
+ */
+function renderCenter(lines: string[]): string {
+  const content = lines.map(l => formatInline(l)).join("<br />");
+  return `<div class="text-center">${content}</div>`;
+}
+
+/**
+ * Render epigraph (chapter opening quotation)
+ */
+function renderEpigraph(lines: string[]): string {
+  const textLines: string[] = [];
+  let attribution = "";
+
+  for (const line of lines) {
+    if (line.startsWith("--")) {
+      attribution = line.slice(2).trim();
+    } else if (line.trim()) {
+      textLines.push(line.trim());
+    }
+  }
+
+  let html = `<div class="epigraph"><blockquote><p>${formatInline(textLines.join(" "))}</p>`;
+  if (attribution) {
+    html += `<footer>— ${formatInline(attribution)}</footer>`;
+  }
+  html += "</blockquote></div>";
+  return html;
 }
 
 function escapeHtml(text: string): string {

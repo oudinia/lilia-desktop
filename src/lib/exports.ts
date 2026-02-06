@@ -47,6 +47,7 @@ export function exportToLatex(lmlContent: string): string {
   output.push("\\usepackage{hyperref}");
   output.push("\\usepackage{soul}"); // For highlight (\hl) and strikethrough (\st)
   output.push("\\usepackage{xcolor}"); // For colored text
+  output.push("\\usepackage{tcolorbox}"); // For callout/alert boxes
 
   if (fontFamily === "charter") {
     output.push("\\usepackage{charter}");
@@ -268,6 +269,50 @@ export function exportToLatex(lmlContent: string): string {
       while (i < lines.length && !lines[i].startsWith("@") && !lines[i].startsWith("#")) {
         i++;
       }
+      continue;
+    }
+    // Alert/callout box
+    else if (trimmed.startsWith("@alert")) {
+      const type = trimmed.match(/\((\w+)\)/)?.[1] || "info";
+      output.push("\\begin{tcolorbox}[title=" + type.charAt(0).toUpperCase() + type.slice(1) + "]");
+      i++;
+      while (i < lines.length && !lines[i].startsWith("@") && !lines[i].startsWith("#")) {
+        if (lines[i].trim()) output.push(convertInlineToLatex(lines[i]));
+        i++;
+      }
+      output.push("\\end{tcolorbox}");
+      continue;
+    }
+    // Centered text
+    else if (trimmed.startsWith("@center")) {
+      output.push("\\begin{center}");
+      i++;
+      while (i < lines.length && !lines[i].startsWith("@") && !lines[i].startsWith("#")) {
+        if (lines[i].trim()) output.push(convertInlineToLatex(lines[i]) + " \\\\");
+        i++;
+      }
+      output.push("\\end{center}");
+      continue;
+    }
+    // Epigraph
+    else if (trimmed.startsWith("@epigraph")) {
+      i++;
+      const epiLines: string[] = [];
+      let attribution = "";
+      while (i < lines.length && !lines[i].startsWith("@") && !lines[i].startsWith("#")) {
+        if (lines[i].trim().startsWith("--")) {
+          attribution = lines[i].trim().slice(2).trim();
+        } else if (lines[i].trim()) {
+          epiLines.push(lines[i].trim());
+        }
+        i++;
+      }
+      output.push("\\begin{quote}");
+      output.push("\\textit{" + epiLines.map(l => convertInlineToLatex(l)).join(" ") + "}");
+      if (attribution) {
+        output.push("\\par\\hfill--- " + escapeLatex(attribution));
+      }
+      output.push("\\end{quote}");
       continue;
     }
     // Regular paragraph
@@ -540,6 +585,60 @@ export function exportToMarkdown(lmlContent: string): string {
         i++;
       }
       output.push(`[^${id}]: ${contentLines.join(" ")}`);
+      continue;
+    }
+    // Alert/callout box
+    else if (trimmed.startsWith("@alert")) {
+      const type = trimmed.match(/\((\w+)\)/)?.[1] || "info";
+      const icons: Record<string, string> = {
+        info: "ℹ️",
+        warning: "⚠️",
+        danger: "🚨",
+        success: "✅",
+        tip: "💡",
+        note: "📝",
+      };
+      const icon = icons[type] || icons.info;
+      output.push(`> ${icon} **${type.charAt(0).toUpperCase() + type.slice(1)}**`);
+      output.push(">");
+      i++;
+      while (i < lines.length && !lines[i].startsWith("@") && !lines[i].startsWith("#")) {
+        if (lines[i].trim()) output.push("> " + lines[i].trim());
+        i++;
+      }
+      output.push("");
+      continue;
+    }
+    // Centered text (use HTML in Markdown)
+    else if (trimmed.startsWith("@center")) {
+      output.push('<div align="center">');
+      i++;
+      while (i < lines.length && !lines[i].startsWith("@") && !lines[i].startsWith("#")) {
+        if (lines[i].trim()) output.push(lines[i].trim());
+        i++;
+      }
+      output.push("</div>");
+      output.push("");
+      continue;
+    }
+    // Epigraph
+    else if (trimmed.startsWith("@epigraph")) {
+      i++;
+      const epiLines: string[] = [];
+      let attribution = "";
+      while (i < lines.length && !lines[i].startsWith("@") && !lines[i].startsWith("#")) {
+        if (lines[i].trim().startsWith("--")) {
+          attribution = lines[i].trim().slice(2).trim();
+        } else if (lines[i].trim()) {
+          epiLines.push(lines[i].trim());
+        }
+        i++;
+      }
+      output.push("> *" + epiLines.join(" ") + "*");
+      if (attribution) {
+        output.push("> — " + attribution);
+      }
+      output.push("");
       continue;
     }
     // Regular content

@@ -467,6 +467,30 @@ export function registerLmlLanguage(monaco: Monaco) {
           documentation: "Colored text",
           range,
         },
+        {
+          label: "@alert",
+          kind: monaco.languages.CompletionItemKind.Snippet,
+          insertText: "@alert(${1|info,warning,danger,success,tip,note|})\n${2:Alert content here.}\n",
+          insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
+          documentation: "Alert/callout box (info, warning, danger, success, tip, note)",
+          range,
+        },
+        {
+          label: "@center",
+          kind: monaco.languages.CompletionItemKind.Snippet,
+          insertText: "@center\n${1:Centered text here.}\n",
+          insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
+          documentation: "Centered text block",
+          range,
+        },
+        {
+          label: "@epigraph",
+          kind: monaco.languages.CompletionItemKind.Snippet,
+          insertText: "@epigraph\n${1:A wise quote here.}\n-- ${2:Author Name}\n",
+          insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
+          documentation: "Epigraph (chapter opening quotation)",
+          range,
+        },
         // Greek letters
         ...greekLetters.map((letter) => ({
           label: `\\${letter}`,

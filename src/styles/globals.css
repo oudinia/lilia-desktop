@@ -327,3 +327,58 @@
 .lml-preview .small-caps {
   font-variant: small-caps;
 }
+
+/* Alert/callout boxes */
+.lml-preview .alert {
+  @apply my-4 p-4 rounded-lg border-l-4;
+}
+
+.lml-preview .alert-header {
+  @apply flex items-center gap-2 font-semibold mb-2;
+}
+
+.lml-preview .alert-icon {
+  @apply text-lg;
+}
+
+.lml-preview .alert-info {
+  @apply bg-blue-50 dark:bg-blue-900/20 border-blue-500;
+}
+
+.lml-preview .alert-warning {
+  @apply bg-yellow-50 dark:bg-yellow-900/20 border-yellow-500;
+}
+
+.lml-preview .alert-danger {
+  @apply bg-red-50 dark:bg-red-900/20 border-red-500;
+}
+
+.lml-preview .alert-success {
+  @apply bg-green-50 dark:bg-green-900/20 border-green-500;
+}
+
+.lml-preview .alert-tip {
+  @apply bg-purple-50 dark:bg-purple-900/20 border-purple-500;
+}
+
+.lml-preview .alert-note {
+  @apply bg-gray-50 dark:bg-gray-800/50 border-gray-500;
+}
+
+/* Centered text */
+.lml-preview .text-center {
+  @apply text-center my-4;
+}
+
+/* Epigraph */
+.lml-preview .epigraph {
+  @apply my-8 max-w-md ml-auto;
+}
+
+.lml-preview .epigraph blockquote {
+  @apply border-l-0 pl-0 italic text-right;
+}
+
+.lml-preview .epigraph footer {
+  @apply text-sm text-muted-foreground mt-2;
+}
