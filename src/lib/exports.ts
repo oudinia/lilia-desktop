@@ -48,6 +48,7 @@ export function exportToLatex(lmlContent: string): string {
   output.push("\\usepackage{soul}"); // For highlight (\hl) and strikethrough (\st)
   output.push("\\usepackage{xcolor}"); // For colored text
   output.push("\\usepackage{tcolorbox}"); // For callout/alert boxes
+  output.push("\\usepackage{lettrine}"); // For drop caps
 
   if (fontFamily === "charter") {
     output.push("\\usepackage{charter}");
@@ -314,6 +315,29 @@ export function exportToLatex(lmlContent: string): string {
       }
       output.push("\\end{quote}");
       continue;
+    }
+    // Drop cap paragraph
+    else if (trimmed.startsWith("@dropcap")) {
+      i++;
+      const dcLines: string[] = [];
+      while (i < lines.length && !lines[i].startsWith("@") && !lines[i].startsWith("#")) {
+        if (lines[i].trim()) dcLines.push(lines[i].trim());
+        i++;
+      }
+      const text = dcLines.join(" ");
+      if (text) {
+        const firstChar = text.charAt(0);
+        const rest = text.slice(1);
+        output.push("\\lettrine{" + firstChar + "}{}" + convertInlineToLatex(rest));
+        output.push("");
+      }
+      continue;
+    }
+    // Decorative divider
+    else if (trimmed === "@divider" || trimmed.startsWith("@divider(")) {
+      output.push("\\begin{center}");
+      output.push("\\rule{0.5\\textwidth}{0.5pt}");
+      output.push("\\end{center}");
     }
     // Regular paragraph
     else if (trimmed && !trimmed.startsWith("@")) {
@@ -641,6 +665,24 @@ export function exportToMarkdown(lmlContent: string): string {
       output.push("");
       continue;
     }
+    // Drop cap paragraph (just render as normal paragraph in Markdown)
+    else if (trimmed.startsWith("@dropcap")) {
+      i++;
+      const dcLines: string[] = [];
+      while (i < lines.length && !lines[i].startsWith("@") && !lines[i].startsWith("#")) {
+        if (lines[i].trim()) dcLines.push(lines[i].trim());
+        i++;
+      }
+      output.push(dcLines.join(" "));
+      output.push("");
+      continue;
+    }
+    // Decorative divider
+    else if (trimmed === "@divider" || trimmed.startsWith("@divider(")) {
+      output.push("");
+      output.push("* * *");
+      output.push("");
+    }
     // Regular content
     else if (trimmed) {
       // Handle inline directives in content
@@ -656,7 +698,9 @@ export function exportToMarkdown(lmlContent: string): string {
         .replace(/@sub\(([^)]+)\)/g, "<sub>$1</sub>") // HTML subscript
         .replace(/@sup\(([^)]+)\)/g, "<sup>$1</sup>") // HTML superscript
         .replace(/@sc\(([^)]+)\)/g, "$1") // No small caps in Markdown
-        .replace(/@color\(([^,]+),\s*([^)]+)\)/g, "$1"); // No color in Markdown
+        .replace(/@color\(([^,]+),\s*([^)]+)\)/g, "$1") // No color in Markdown
+        .replace(/@img\(([^,)]+),\s*([^)]+)\)/g, "![$2]($1)")
+        .replace(/@img\(([^)]+)\)/g, "![]($1)");
       output.push(processed);
     } else {
       output.push("");
@@ -726,6 +770,9 @@ function convertInlineToLatex(text: string): string {
     .replace(/@sc\(([^)]+)\)/g, "\\textsc{$1}")
     // Colored text - use xcolor package
     .replace(/@color\(([^,]+),\s*([^)]+)\)/g, "\\textcolor{$2}{$1}")
+    // Inline image
+    .replace(/@img\(([^,)]+),\s*([^)]+)\)/g, "\\includegraphics[height=1em]{$1}")
+    .replace(/@img\(([^)]+)\)/g, "\\includegraphics[height=1em]{$1}")
     .replace(/\*\*(.+?)\*\*/g, "\\textbf{$1}")
     .replace(/\*(.+?)\*/g, "\\textit{$1}")
     .replace(/`(.+?)`/g, "\\texttt{$1}")

@@ -186,6 +186,17 @@ function detectBlockStart(line: string): BlockStart | null {
     return { type: "epigraph" };
   }
 
+  // Drop cap paragraph
+  if (line.startsWith("@dropcap")) {
+    return { type: "dropcap" };
+  }
+
+  // Decorative divider
+  if (line === "@divider" || line.startsWith("@divider(")) {
+    const style = line.match(/\((\w+)\)/)?.[1] || "stars";
+    return { type: "divider", params: style };
+  }
+
   // Raw LaTeX passthrough block
   if (line === "@latex") {
     return { type: "latex" };
@@ -243,6 +254,10 @@ function renderBlock(type: string | null, lines: string[]): string {
       return renderCenter(lines);
     case "epigraph":
       return renderEpigraph(lines);
+    case "dropcap":
+      return renderDropcap(lines);
+    case "divider":
+      return renderDivider(lines);
     case "hr":
       return "<hr />";
     default:
@@ -520,6 +535,10 @@ function formatInline(text: string): string {
   // Colored text: @color(text, colorname)
   result = result.replace(/@color\(([^,]+),\s*([^)]+)\)/g, '<span style="color: $2">$1</span>');
 
+  // Inline image: @img(src) or @img(src, alt)
+  result = result.replace(/@img\(([^,)]+),\s*([^)]+)\)/g, '<img src="$1" alt="$2" class="inline-img" />');
+  result = result.replace(/@img\(([^)]+)\)/g, '<img src="$1" alt="" class="inline-img" />');
+
   return result;
 }
 
@@ -693,6 +712,38 @@ function renderEpigraph(lines: string[]): string {
   }
   html += "</blockquote></div>";
   return html;
+}
+
+/**
+ * Render drop cap paragraph
+ */
+function renderDropcap(lines: string[]): string {
+  const text = lines.join(" ").trim();
+  if (!text) return "";
+
+  const firstChar = text.charAt(0);
+  const rest = text.slice(1);
+
+  return `<p class="dropcap"><span class="dropcap-letter">${firstChar}</span>${formatInline(rest)}</p>`;
+}
+
+/**
+ * Render decorative divider
+ */
+function renderDivider(lines: string[]): string {
+  const style = lines[0] || "stars";
+
+  const dividers: Record<string, string> = {
+    stars: "⁂",
+    asterisk: "* * *",
+    dashes: "— — —",
+    dots: "• • •",
+    fleuron: "❧",
+    line: "───────",
+  };
+
+  const symbol = dividers[style] || dividers.stars;
+  return `<div class="divider divider-${style}">${symbol}</div>`;
 }
 
 function escapeHtml(text: string): string {

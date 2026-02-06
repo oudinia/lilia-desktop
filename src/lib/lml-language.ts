@@ -491,6 +491,30 @@ export function registerLmlLanguage(monaco: Monaco) {
           documentation: "Epigraph (chapter opening quotation)",
           range,
         },
+        {
+          label: "@dropcap",
+          kind: monaco.languages.CompletionItemKind.Snippet,
+          insertText: "@dropcap\n${1:Once upon a time, in a land far away...}\n",
+          insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
+          documentation: "Drop cap paragraph (large first letter)",
+          range,
+        },
+        {
+          label: "@divider",
+          kind: monaco.languages.CompletionItemKind.Snippet,
+          insertText: "@divider(${1|stars,asterisk,dashes,dots,fleuron,line|})",
+          insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
+          documentation: "Decorative section divider",
+          range,
+        },
+        {
+          label: "@img",
+          kind: monaco.languages.CompletionItemKind.Snippet,
+          insertText: "@img(${1:/path/to/image.png}, ${2:alt text})",
+          insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
+          documentation: "Inline image",
+          range,
+        },
         // Greek letters
         ...greekLetters.map((letter) => ({
           label: `\\${letter}`,

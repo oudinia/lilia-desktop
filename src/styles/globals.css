@@ -382,3 +382,27 @@
 .lml-preview .epigraph footer {
   @apply text-sm text-muted-foreground mt-2;
 }
+
+/* Drop cap */
+.lml-preview .dropcap {
+  @apply my-4;
+}
+
+.lml-preview .dropcap-letter {
+  @apply float-left text-5xl font-bold leading-none mr-2 mt-1;
+  font-family: Georgia, 'Times New Roman', serif;
+}
+
+/* Decorative dividers */
+.lml-preview .divider {
+  @apply text-center my-8 text-muted-foreground text-xl tracking-widest;
+}
+
+.lml-preview .divider-line {
+  @apply text-sm;
+}
+
+/* Inline image */
+.lml-preview .inline-img {
+  @apply inline-block h-[1.2em] align-text-bottom mx-0.5;
+}
