@@ -43,7 +43,6 @@ export function validateLml(content: string): ValidationResult {
   let inLatexBlock = false;
   let latexBlockStart = 0;
   let inCodeBlock = false;
-  let codeBlockStart = 0;
 
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i];
@@ -86,7 +85,6 @@ export function validateLml(content: string): ValidationResult {
     // Track @code block
     if (trimmed.startsWith("@code")) {
       inCodeBlock = true;
-      codeBlockStart = lineNum;
 
       // Check for language parameter
       if (!trimmed.match(/@code\(\w+\)/)) {

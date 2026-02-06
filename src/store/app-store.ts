@@ -324,7 +324,7 @@ export const useAppStore = create<AppState>((set, get) => ({
         wordWrap: boolean;
         lineNumbers: boolean;
         minimap: boolean;
-        theme: string;
+        theme: "light" | "dark";
         livePreview: boolean;
         previewFontSize: number;
         autoSave: boolean;

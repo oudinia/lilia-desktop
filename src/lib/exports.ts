@@ -6,9 +6,6 @@
 export function exportToLatex(lmlContent: string): string {
   const lines = lmlContent.split("\n");
   const output: string[] = [];
-  let inCodeBlock = false;
-  let codeLanguage = "";
-  let codeContent: string[] = [];
   let documentMeta: Record<string, string> = {};
   let inDocument = false;
 
@@ -784,7 +781,6 @@ function convertTableToLatex(lines: string[]): string {
 
   const headerLine = lines[0];
   const headers = headerLine.split("|").filter(c => c.trim()).map(c => c.trim());
-  const colCount = headers.length;
   const colSpec = headers.map(() => "l").join(" | ");
 
   const output: string[] = [];

@@ -10,9 +10,6 @@ export function StatusBar() {
     .split(/\s+/)
     .filter((word) => word.length > 0).length;
 
-  // Calculate character count
-  const charCount = document.content.length;
-
   // Estimate reading time (average 200 words per minute)
   const readingMinutes = Math.max(1, Math.ceil(wordCount / 200));
 

@@ -688,7 +688,7 @@ function renderAlert(lines: string[]): string {
  */
 function renderCenter(lines: string[]): string {
   const content = lines.map(l => formatInline(l)).join("<br />");
-  return `<div class="text-center">${content}</div>`;
+  return `<div class="center-block">${content}</div>`;
 }
 
 /**

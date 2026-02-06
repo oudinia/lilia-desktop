@@ -12,10 +12,8 @@ import {
   Calculator,
   ChevronDown,
   AlertCircle,
-  Type,
   Highlighter,
   Link,
-  Hash,
   MoreHorizontal,
 } from "lucide-react";
 import { Button } from "./ui/Button";
