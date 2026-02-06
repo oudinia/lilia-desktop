@@ -261,3 +261,25 @@
 .lml-preview .toc-placeholder p {
   @apply my-1;
 }
+
+/* Footnote reference */
+.lml-preview .footnote-ref {
+  @apply text-primary;
+}
+
+.lml-preview .footnote-ref a {
+  @apply text-primary no-underline hover:underline;
+}
+
+/* Footnote definition */
+.lml-preview .footnote-def {
+  @apply text-sm text-muted-foreground my-2 pl-6 relative;
+}
+
+.lml-preview .footnote-number {
+  @apply absolute left-0 font-medium text-primary;
+}
+
+.lml-preview .footnote-content {
+  @apply italic;
+}

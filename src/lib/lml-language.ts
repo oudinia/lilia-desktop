@@ -34,6 +34,7 @@ export function registerLmlLanguage(monaco: Monaco) {
       "lorem",      // Lorem ipsum placeholder text
       "date",       // Current date
       "toc",        // Table of contents
+      "footnote",   // Footnote reference
     ],
 
     // LaTeX commands
@@ -360,6 +361,22 @@ export function registerLmlLanguage(monaco: Monaco) {
           insertText: "@toc",
           insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
           documentation: "Table of contents (auto-generated from headings)",
+          range,
+        },
+        {
+          label: "@fn",
+          kind: monaco.languages.CompletionItemKind.Snippet,
+          insertText: "@fn(${1:1})",
+          insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
+          documentation: "Inline footnote reference",
+          range,
+        },
+        {
+          label: "@footnote",
+          kind: monaco.languages.CompletionItemKind.Snippet,
+          insertText: "@footnote(${1:1})\n${2:Footnote content here.}",
+          insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
+          documentation: "Footnote definition",
           range,
         },
         // Greek letters

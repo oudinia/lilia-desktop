@@ -259,6 +259,15 @@ export function exportToLatex(lmlContent: string): string {
       output.push("\\tableofcontents");
       output.push("\\newpage");
     }
+    // Footnote definition (collected for end of document, skip in main flow)
+    else if (trimmed.startsWith("@footnote")) {
+      // Footnotes handled separately at the end
+      i++;
+      while (i < lines.length && !lines[i].startsWith("@") && !lines[i].startsWith("#")) {
+        i++;
+      }
+      continue;
+    }
     // Regular paragraph
     else if (trimmed && !trimmed.startsWith("@")) {
       output.push(convertInlineToLatex(line));
@@ -519,9 +528,22 @@ export function exportToMarkdown(lmlContent: string): string {
       output.push("*[Auto-generated on export]*");
       output.push("");
     }
+    // Footnote definition
+    else if (trimmed.startsWith("@footnote")) {
+      const id = trimmed.match(/\(([^)]+)\)/)?.[1] || "1";
+      i++;
+      const contentLines: string[] = [];
+      while (i < lines.length && !lines[i].startsWith("@") && !lines[i].startsWith("#")) {
+        if (lines[i].trim()) contentLines.push(lines[i].trim());
+        i++;
+      }
+      output.push(`[^${id}]: ${contentLines.join(" ")}`);
+      continue;
+    }
     // Regular content
     else if (trimmed) {
-      output.push(line);
+      // Handle inline footnotes in content
+      output.push(line.replace(/@fn\(([^)]+)\)/g, "[^$1]"));
     } else {
       output.push("");
     }
@@ -565,6 +587,8 @@ function convertInlineToLatex(text: string): string {
   return text
     // Inline raw LaTeX passthrough - output as-is
     .replace(/@raw\(([^)]+)\)/g, "$1")
+    // Inline footnote - convert to LaTeX footnote
+    .replace(/@fn\(([^)]+)\)/g, "\\footnotemark[$1]")
     .replace(/\*\*(.+?)\*\*/g, "\\textbf{$1}")
     .replace(/\*(.+?)\*/g, "\\textit{$1}")
     .replace(/`(.+?)`/g, "\\texttt{$1}")

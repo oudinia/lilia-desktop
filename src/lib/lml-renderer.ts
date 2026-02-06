@@ -164,6 +164,12 @@ function detectBlockStart(line: string): BlockStart | null {
     return { type: "toc" };
   }
 
+  // Footnote definition
+  if (line.startsWith("@footnote")) {
+    const id = line.match(/\(([^)]+)\)/)?.[1] || "1";
+    return { type: "footnote", params: id };
+  }
+
   // Raw LaTeX passthrough block
   if (line === "@latex") {
     return { type: "latex" };
@@ -213,6 +219,8 @@ function renderBlock(type: string | null, lines: string[]): string {
       return renderDate(lines);
     case "toc":
       return renderToc();
+    case "footnote":
+      return renderFootnote(lines);
     case "hr":
       return "<hr />";
     default:
@@ -453,6 +461,9 @@ function formatInline(text: string): string {
   // Inline raw LaTeX: @raw(content) - show placeholder in preview
   result = result.replace(/@raw\(([^)]+)\)/g, '<code class="raw-latex" title="Raw LaTeX: $1">⚡$1</code>');
 
+  // Inline footnote reference: @fn(id)
+  result = result.replace(/@fn\(([^)]+)\)/g, '<sup class="footnote-ref"><a href="#fn-$1">[$1]</a></sup>');
+
   return result;
 }
 
@@ -482,6 +493,18 @@ function renderToc(): string {
   return `<div class="toc-placeholder">
     <p><strong>Table of Contents</strong></p>
     <p class="text-muted-foreground text-sm italic">(Auto-generated from headings on export)</p>
+  </div>`;
+}
+
+/**
+ * Render footnote definition
+ */
+function renderFootnote(lines: string[]): string {
+  const id = lines[0] || "1";
+  const content = lines.slice(1).join(" ").trim();
+  return `<div class="footnote-def" id="fn-${id}">
+    <span class="footnote-number">[${id}]</span>
+    <span class="footnote-content">${formatInline(content)}</span>
   </div>`;
 }
 
