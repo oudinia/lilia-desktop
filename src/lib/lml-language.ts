@@ -379,6 +379,30 @@ export function registerLmlLanguage(monaco: Monaco) {
           documentation: "Footnote definition",
           range,
         },
+        {
+          label: "@hl",
+          kind: monaco.languages.CompletionItemKind.Snippet,
+          insertText: "@hl(${1:highlighted text})",
+          insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
+          documentation: "Highlight text (inline)",
+          range,
+        },
+        {
+          label: "@note",
+          kind: monaco.languages.CompletionItemKind.Snippet,
+          insertText: "@note(${1:Author note here})",
+          insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
+          documentation: "Author note/comment (shown as tooltip)",
+          range,
+        },
+        {
+          label: "@del",
+          kind: monaco.languages.CompletionItemKind.Snippet,
+          insertText: "@del(${1:deleted text})",
+          insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
+          documentation: "Strikethrough text",
+          range,
+        },
         // Greek letters
         ...greekLetters.map((letter) => ({
           label: `\\${letter}`,

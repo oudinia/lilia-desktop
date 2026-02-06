@@ -464,6 +464,15 @@ function formatInline(text: string): string {
   // Inline footnote reference: @fn(id)
   result = result.replace(/@fn\(([^)]+)\)/g, '<sup class="footnote-ref"><a href="#fn-$1">[$1]</a></sup>');
 
+  // Inline highlight: @hl(text) or @highlight(text)
+  result = result.replace(/@(?:hl|highlight)\(([^)]+)\)/g, '<mark class="highlight">$1</mark>');
+
+  // Inline comment/note: @note(text) - shown as tooltip
+  result = result.replace(/@(?:note|comment)\(([^)]+)\)/g, '<span class="author-note" title="$1">📝</span>');
+
+  // Strikethrough: @del(text) or @strike(text)
+  result = result.replace(/@(?:del|strike)\(([^)]+)\)/g, '<del>$1</del>');
+
   return result;
 }
 

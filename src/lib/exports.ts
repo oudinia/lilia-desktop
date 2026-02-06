@@ -45,6 +45,7 @@ export function exportToLatex(lmlContent: string): string {
   output.push("\\usepackage{graphicx}");
   output.push("\\usepackage{listings}");
   output.push("\\usepackage{hyperref}");
+  output.push("\\usepackage{soul}"); // For highlight (\hl) and strikethrough (\st)
 
   if (fontFamily === "charter") {
     output.push("\\usepackage{charter}");
@@ -589,6 +590,12 @@ function convertInlineToLatex(text: string): string {
     .replace(/@raw\(([^)]+)\)/g, "$1")
     // Inline footnote - convert to LaTeX footnote
     .replace(/@fn\(([^)]+)\)/g, "\\footnotemark[$1]")
+    // Highlight - use soul package or colorbox
+    .replace(/@(?:hl|highlight)\(([^)]+)\)/g, "\\hl{$1}")
+    // Author note - use marginpar or comment
+    .replace(/@(?:note|comment)\(([^)]+)\)/g, "% NOTE: $1")
+    // Strikethrough - use soul package
+    .replace(/@(?:del|strike)\(([^)]+)\)/g, "\\st{$1}")
     .replace(/\*\*(.+?)\*\*/g, "\\textbf{$1}")
     .replace(/\*(.+?)\*/g, "\\textit{$1}")
     .replace(/`(.+?)`/g, "\\texttt{$1}")

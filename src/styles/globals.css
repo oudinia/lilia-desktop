@@ -283,3 +283,18 @@
 .lml-preview .footnote-content {
   @apply italic;
 }
+
+/* Highlight */
+.lml-preview .highlight {
+  @apply bg-yellow-200 dark:bg-yellow-800 px-0.5 rounded;
+}
+
+/* Author note/comment */
+.lml-preview .author-note {
+  @apply cursor-help text-blue-500;
+}
+
+/* Strikethrough */
+.lml-preview del {
+  @apply text-muted-foreground;
+}
