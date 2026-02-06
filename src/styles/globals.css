@@ -1,0 +1,240 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 222.2 84% 4.9%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 222.2 84% 4.9%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 222.2 84% 4.9%;
+
+    --primary: 222.2 47.4% 11.2%;
+    --primary-foreground: 210 40% 98%;
+
+    --secondary: 210 40% 96.1%;
+    --secondary-foreground: 222.2 47.4% 11.2%;
+
+    --muted: 210 40% 96.1%;
+    --muted-foreground: 215.4 16.3% 46.9%;
+
+    --accent: 210 40% 96.1%;
+    --accent-foreground: 222.2 47.4% 11.2%;
+
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 40% 98%;
+
+    --border: 214.3 31.8% 91.4%;
+    --input: 214.3 31.8% 91.4%;
+    --ring: 222.2 84% 4.9%;
+
+    --radius: 0.5rem;
+  }
+
+  .dark {
+    --background: 222.2 84% 4.9%;
+    --foreground: 210 40% 98%;
+
+    --card: 222.2 84% 4.9%;
+    --card-foreground: 210 40% 98%;
+
+    --popover: 222.2 84% 4.9%;
+    --popover-foreground: 210 40% 98%;
+
+    --primary: 210 40% 98%;
+    --primary-foreground: 222.2 47.4% 11.2%;
+
+    --secondary: 217.2 32.6% 17.5%;
+    --secondary-foreground: 210 40% 98%;
+
+    --muted: 217.2 32.6% 17.5%;
+    --muted-foreground: 215 20.2% 65.1%;
+
+    --accent: 217.2 32.6% 17.5%;
+    --accent-foreground: 210 40% 98%;
+
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 40% 98%;
+
+    --border: 217.2 32.6% 17.5%;
+    --input: 217.2 32.6% 17.5%;
+    --ring: 212.7 26.8% 83.9%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+    font-feature-settings: "rlig" 1, "calt" 1;
+  }
+}
+
+/* Prevent text selection during resize */
+.resize-handle {
+  user-select: none;
+}
+
+/* Monaco editor overrides */
+.monaco-editor {
+  font-feature-settings: "liga" 1, "calt" 1;
+}
+
+/* Custom scrollbar for dark mode */
+.dark ::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.dark ::-webkit-scrollbar-track {
+  background: hsl(217.2 32.6% 17.5%);
+}
+
+.dark ::-webkit-scrollbar-thumb {
+  background: hsl(215 20.2% 35%);
+  border-radius: 4px;
+}
+
+.dark ::-webkit-scrollbar-thumb:hover {
+  background: hsl(215 20.2% 45%);
+}
+
+/* Preview styles */
+.lml-preview {
+  line-height: 1.7;
+}
+
+.lml-preview h1 {
+  @apply text-3xl font-bold mt-8 mb-4 pb-2 border-b border-border;
+}
+
+.lml-preview h2 {
+  @apply text-2xl font-bold mt-6 mb-3;
+}
+
+.lml-preview h3 {
+  @apply text-xl font-semibold mt-5 mb-2;
+}
+
+.lml-preview h4 {
+  @apply text-lg font-semibold mt-4 mb-2;
+}
+
+.lml-preview p {
+  @apply my-4;
+}
+
+.lml-preview blockquote {
+  @apply border-l-4 border-muted-foreground/30 pl-4 italic my-4 text-muted-foreground;
+}
+
+.lml-preview code:not(pre code) {
+  @apply bg-muted px-1.5 py-0.5 rounded text-sm font-mono;
+}
+
+.lml-preview pre {
+  @apply bg-muted p-4 rounded-lg my-4 overflow-x-auto;
+}
+
+.lml-preview pre code {
+  @apply text-sm font-mono;
+}
+
+.lml-preview table {
+  @apply w-full my-4 border-collapse;
+}
+
+.lml-preview th,
+.lml-preview td {
+  @apply border border-border px-4 py-2 text-left;
+}
+
+.lml-preview th {
+  @apply bg-muted font-semibold;
+}
+
+.lml-preview ul {
+  @apply list-disc list-inside my-4 space-y-1;
+}
+
+.lml-preview ol {
+  @apply list-decimal list-inside my-4 space-y-1;
+}
+
+.lml-preview hr {
+  @apply my-8 border-border;
+}
+
+.lml-preview figure {
+  @apply my-6 text-center;
+}
+
+.lml-preview figcaption {
+  @apply text-sm text-muted-foreground mt-2 italic;
+}
+
+.lml-preview .equation {
+  @apply my-6 text-center overflow-x-auto;
+}
+
+.lml-preview .equation-number {
+  @apply text-muted-foreground text-sm;
+}
+
+/* KaTeX display math */
+.lml-preview .katex-display {
+  @apply my-4;
+}
+
+/* Theorem-like blocks */
+.lml-preview .theorem-block {
+  @apply my-6 p-4 border-l-4 bg-muted/50;
+}
+
+.lml-preview .theorem-block.definition {
+  @apply border-blue-500;
+}
+
+.lml-preview .theorem-block.theorem {
+  @apply border-purple-500;
+}
+
+.lml-preview .theorem-block.lemma {
+  @apply border-green-500;
+}
+
+.lml-preview .theorem-block.proof {
+  @apply border-gray-500 italic;
+}
+
+.lml-preview .theorem-title {
+  @apply font-bold mb-2;
+}
+
+/* Raw LaTeX passthrough block */
+.lml-preview .latex-passthrough {
+  @apply my-6 border border-dashed border-amber-500/50 rounded-lg overflow-hidden;
+}
+
+.lml-preview .latex-passthrough-header {
+  @apply flex items-center gap-2 px-4 py-2 bg-amber-500/10 text-amber-700 dark:text-amber-400 text-sm font-medium;
+}
+
+.lml-preview .latex-passthrough-icon {
+  @apply text-lg;
+}
+
+.lml-preview .latex-passthrough-code {
+  @apply p-4 m-0 bg-muted/30 text-xs font-mono text-muted-foreground;
+}
+
+/* Inline raw LaTeX */
+.lml-preview .raw-latex {
+  @apply bg-amber-500/10 text-amber-700 dark:text-amber-400 px-1 py-0.5 rounded text-sm font-mono border border-amber-500/30;
+}
