@@ -238,3 +238,12 @@
 .lml-preview .raw-latex {
   @apply bg-amber-500/10 text-amber-700 dark:text-amber-400 px-1 py-0.5 rounded text-sm font-mono border border-amber-500/30;
 }
+
+/* Lorem ipsum preview */
+.lml-preview .lorem-preview {
+  @apply my-4 p-4 bg-blue-50 dark:bg-blue-900/20 border-l-4 border-blue-400 rounded-r-lg;
+}
+
+.lml-preview .lorem-preview p {
+  @apply my-0 text-muted-foreground italic;
+}

@@ -31,6 +31,7 @@ export function registerLmlLanguage(monaco: Monaco) {
       "pagebreak",
       "latex",      // Raw LaTeX passthrough block
       "endlatex",   // End of raw LaTeX block
+      "lorem",      // Lorem ipsum placeholder text
     ],
 
     // LaTeX commands
@@ -98,7 +99,7 @@ export function registerLmlLanguage(monaco: Monaco) {
 
         // Block markers with parameters
         [
-          /@(equation|figure|code|table|list|abstract|definition|theorem|proof|lemma|proposition|corollary|remark|example|bib)/,
+          /@(equation|figure|code|table|list|abstract|definition|theorem|proof|lemma|proposition|corollary|remark|example|bib|lorem)/,
           "keyword",
         ],
 
@@ -333,6 +334,14 @@ export function registerLmlLanguage(monaco: Monaco) {
           insertText: "@raw(${1:\\LaTeX})",
           insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
           documentation: "Inline raw LaTeX (no preview, exported as-is)",
+          range,
+        },
+        {
+          label: "@lorem",
+          kind: monaco.languages.CompletionItemKind.Snippet,
+          insertText: "@lorem(${1|paragraphs,sentences,words|}: ${2:3})",
+          insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
+          documentation: "Generate Lorem Ipsum placeholder text",
           range,
         },
         // Greek letters

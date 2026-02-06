@@ -147,6 +147,12 @@ function detectBlockStart(line: string): BlockStart | null {
     return { type: "abstract" };
   }
 
+  // Lorem ipsum placeholder
+  if (line.startsWith("@lorem")) {
+    const params = line.match(/\(([^)]*)\)/)?.[1] || "";
+    return { type: "lorem", params };
+  }
+
   // Raw LaTeX passthrough block
   if (line === "@latex") {
     return { type: "latex" };
@@ -190,6 +196,8 @@ function renderBlock(type: string | null, lines: string[]): string {
       return renderAbstract(lines);
     case "latex":
       return renderLatexPassthrough(lines);
+    case "lorem":
+      return renderLorem(lines);
     case "hr":
       return "<hr />";
     default:
@@ -431,6 +439,81 @@ function formatInline(text: string): string {
   result = result.replace(/@raw\(([^)]+)\)/g, '<code class="raw-latex" title="Raw LaTeX: $1">⚡$1</code>');
 
   return result;
+}
+
+/**
+ * Render Lorem Ipsum placeholder text
+ */
+function renderLorem(lines: string[]): string {
+  const params = lines[0] || "";
+
+  // Parse parameters: paragraphs: 3, sentences: 5, words: 50
+  const typeMatch = params.match(/(paragraphs?|sentences?|words?):\s*(\d+)/i);
+  const type = typeMatch?.[1]?.toLowerCase() || "paragraphs";
+  const count = parseInt(typeMatch?.[2] || "3", 10);
+
+  let text = "";
+  if (type.startsWith("word")) {
+    text = generateLoremWords(count);
+  } else if (type.startsWith("sentence")) {
+    text = generateLoremSentences(count);
+  } else {
+    text = generateLoremParagraphs(count);
+  }
+
+  return `<div class="lorem-preview"><p>${text}</p></div>`;
+}
+
+// Lorem Ipsum generator (client-side)
+const LOREM_WORDS = [
+  "lorem", "ipsum", "dolor", "sit", "amet", "consectetur", "adipiscing", "elit",
+  "sed", "do", "eiusmod", "tempor", "incididunt", "ut", "labore", "et", "dolore",
+  "magna", "aliqua", "enim", "ad", "minim", "veniam", "quis", "nostrud",
+  "exercitation", "ullamco", "laboris", "nisi", "aliquip", "ex", "ea", "commodo",
+  "consequat", "duis", "aute", "irure", "in", "reprehenderit", "voluptate",
+  "velit", "esse", "cillum", "fugiat", "nulla", "pariatur", "excepteur", "sint",
+  "occaecat", "cupidatat", "non", "proident", "sunt", "culpa", "qui", "officia",
+  "deserunt", "mollit", "anim", "id", "est", "laborum"
+];
+
+const LOREM_OPENING = "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.";
+
+function generateLoremWords(count: number): string {
+  if (count <= 0) return "";
+  const words = ["Lorem", "ipsum", "dolor", "sit", "amet"];
+  for (let i = 5; i < count; i++) {
+    words.push(LOREM_WORDS[Math.floor(Math.random() * LOREM_WORDS.length)]);
+  }
+  return words.slice(0, count).join(" ");
+}
+
+function generateLoremSentences(count: number): string {
+  if (count <= 0) return "";
+  const sentences = [LOREM_OPENING];
+  for (let i = 1; i < count; i++) {
+    sentences.push(generateRandomSentence());
+  }
+  return sentences.slice(0, count).join(" ");
+}
+
+function generateLoremParagraphs(count: number): string {
+  if (count <= 0) return "";
+  const paragraphs: string[] = [];
+  for (let i = 0; i < count; i++) {
+    const sentenceCount = 4 + Math.floor(Math.random() * 4);
+    paragraphs.push(generateLoremSentences(sentenceCount));
+  }
+  return paragraphs.join("</p><p>");
+}
+
+function generateRandomSentence(): string {
+  const wordCount = 8 + Math.floor(Math.random() * 8);
+  const words: string[] = [];
+  for (let i = 0; i < wordCount; i++) {
+    words.push(LOREM_WORDS[Math.floor(Math.random() * LOREM_WORDS.length)]);
+  }
+  words[0] = words[0].charAt(0).toUpperCase() + words[0].slice(1);
+  return words.join(" ") + ".";
 }
 
 function escapeHtml(text: string): string {

@@ -242,6 +242,13 @@ export function exportToLatex(lmlContent: string): string {
     else if (trimmed === "@pagebreak") {
       output.push("\\newpage");
     }
+    // Lorem ipsum placeholder
+    else if (trimmed.startsWith("@lorem")) {
+      const typeMatch = trimmed.match(/(paragraphs?|sentences?|words?):\s*(\d+)/i);
+      const type = typeMatch?.[1]?.toLowerCase() || "paragraphs";
+      const count = parseInt(typeMatch?.[2] || "3", 10);
+      output.push(generateLoremForLatex(type, count));
+    }
     // Regular paragraph
     else if (trimmed && !trimmed.startsWith("@")) {
       output.push(convertInlineToLatex(line));
@@ -481,6 +488,14 @@ export function exportToMarkdown(lmlContent: string): string {
     else if (trimmed === "@pagebreak") {
       output.push("---");
     }
+    // Lorem ipsum placeholder
+    else if (trimmed.startsWith("@lorem")) {
+      const typeMatch = trimmed.match(/(paragraphs?|sentences?|words?):\s*(\d+)/i);
+      const type = typeMatch?.[1]?.toLowerCase() || "paragraphs";
+      const count = parseInt(typeMatch?.[2] || "3", 10);
+      output.push(generateLoremForLatex(type, count));
+      output.push("");
+    }
     // Regular content
     else if (trimmed) {
       output.push(line);
@@ -562,4 +577,66 @@ function convertTableToLatex(lines: string[]): string {
   output.push("\\end{table}");
 
   return output.join("\n");
+}
+
+// Lorem Ipsum generator for exports
+const LOREM_WORDS = [
+  "lorem", "ipsum", "dolor", "sit", "amet", "consectetur", "adipiscing", "elit",
+  "sed", "do", "eiusmod", "tempor", "incididunt", "ut", "labore", "et", "dolore",
+  "magna", "aliqua", "enim", "ad", "minim", "veniam", "quis", "nostrud",
+  "exercitation", "ullamco", "laboris", "nisi", "aliquip", "ex", "ea", "commodo",
+  "consequat", "duis", "aute", "irure", "in", "reprehenderit", "voluptate",
+  "velit", "esse", "cillum", "fugiat", "nulla", "pariatur", "excepteur", "sint",
+  "occaecat", "cupidatat", "non", "proident", "sunt", "culpa", "qui", "officia",
+  "deserunt", "mollit", "anim", "id", "est", "laborum"
+];
+
+const LOREM_OPENING = "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.";
+
+function generateLoremForLatex(type: string, count: number): string {
+  if (type.startsWith("word")) {
+    return generateLoremWords(count);
+  } else if (type.startsWith("sentence")) {
+    return generateLoremSentences(count);
+  } else {
+    return generateLoremParagraphs(count);
+  }
+}
+
+function generateLoremWords(count: number): string {
+  if (count <= 0) return "";
+  const words = ["Lorem", "ipsum", "dolor", "sit", "amet"];
+  for (let i = 5; i < count; i++) {
+    words.push(LOREM_WORDS[Math.floor(Math.random() * LOREM_WORDS.length)]);
+  }
+  return words.slice(0, count).join(" ");
+}
+
+function generateLoremSentences(count: number): string {
+  if (count <= 0) return "";
+  const sentences = [LOREM_OPENING];
+  for (let i = 1; i < count; i++) {
+    sentences.push(generateRandomSentence());
+  }
+  return sentences.slice(0, count).join(" ");
+}
+
+function generateLoremParagraphs(count: number): string {
+  if (count <= 0) return "";
+  const paragraphs: string[] = [];
+  for (let i = 0; i < count; i++) {
+    const sentenceCount = 4 + Math.floor(Math.random() * 4);
+    paragraphs.push(generateLoremSentences(sentenceCount));
+  }
+  return paragraphs.join("\n\n");
+}
+
+function generateRandomSentence(): string {
+  const wordCount = 8 + Math.floor(Math.random() * 8);
+  const words: string[] = [];
+  for (let i = 0; i < wordCount; i++) {
+    words.push(LOREM_WORDS[Math.floor(Math.random() * LOREM_WORDS.length)]);
+  }
+  words[0] = words[0].charAt(0).toUpperCase() + words[0].slice(1);
+  return words.join(" ") + ".";
 }
