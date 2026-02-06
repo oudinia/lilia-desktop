@@ -447,14 +447,14 @@ function renderAbstract(lines: string[]): string {
 function renderLatexPassthrough(lines: string[]): string {
   // Filter out @endlatex if present
   const content = lines.filter(l => l.trim() !== "@endlatex").join("\n");
-  const preview = escapeHtml(content.substring(0, 100));
-  const truncated = content.length > 100 ? "..." : "";
+  const preview = escapeHtml(content.substring(0, 150));
+  const truncated = content.length > 150 ? "..." : "";
 
   return `
     <div class="latex-passthrough">
       <div class="latex-passthrough-header">
         <span class="latex-passthrough-icon">⚡</span>
-        <span>Raw LaTeX (rendered in export)</span>
+        <span>Raw LaTeX — will render in final PDF</span>
       </div>
       <pre class="latex-passthrough-code"><code>${preview}${truncated}</code></pre>
     </div>
@@ -496,7 +496,7 @@ function formatInline(text: string): string {
   result = result.replace(/\\cite\{([^}]+)\}/g, '<span class="citation">[$1]</span>');
 
   // Inline raw LaTeX: @raw(content) - show placeholder in preview
-  result = result.replace(/@raw\(([^)]+)\)/g, '<code class="raw-latex" title="Raw LaTeX: $1">⚡$1</code>');
+  result = result.replace(/@raw\(([^)]+)\)/g, '<code class="raw-latex" title="Will render in final PDF: $1">⚡$1</code>');
 
   // Inline footnote reference: @fn(id)
   result = result.replace(/@fn\(([^)]+)\)/g, '<sup class="footnote-ref"><a href="#fn-$1">[$1]</a></sup>');
