@@ -32,6 +32,8 @@ export function registerLmlLanguage(monaco: Monaco) {
       "latex",      // Raw LaTeX passthrough block
       "endlatex",   // End of raw LaTeX block
       "lorem",      // Lorem ipsum placeholder text
+      "date",       // Current date
+      "toc",        // Table of contents
     ],
 
     // LaTeX commands
@@ -342,6 +344,22 @@ export function registerLmlLanguage(monaco: Monaco) {
           insertText: "@lorem(${1|paragraphs,sentences,words|}: ${2:3})",
           insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
           documentation: "Generate Lorem Ipsum placeholder text",
+          range,
+        },
+        {
+          label: "@date",
+          kind: monaco.languages.CompletionItemKind.Snippet,
+          insertText: "@date(${1|long,short,iso|})",
+          insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
+          documentation: "Insert current date (long, short, or ISO format)",
+          range,
+        },
+        {
+          label: "@toc",
+          kind: monaco.languages.CompletionItemKind.Snippet,
+          insertText: "@toc",
+          insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
+          documentation: "Table of contents (auto-generated from headings)",
           range,
         },
         // Greek letters

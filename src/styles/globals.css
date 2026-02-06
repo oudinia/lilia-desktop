@@ -247,3 +247,17 @@
 .lml-preview .lorem-preview p {
   @apply my-0 text-muted-foreground italic;
 }
+
+/* Date value */
+.lml-preview .date-value {
+  @apply font-medium;
+}
+
+/* Table of contents placeholder */
+.lml-preview .toc-placeholder {
+  @apply my-6 p-4 bg-muted/50 border border-dashed border-border rounded-lg text-center;
+}
+
+.lml-preview .toc-placeholder p {
+  @apply my-1;
+}

@@ -153,6 +153,17 @@ function detectBlockStart(line: string): BlockStart | null {
     return { type: "lorem", params };
   }
 
+  // Date
+  if (line.startsWith("@date")) {
+    const params = line.match(/\(([^)]*)\)/)?.[1] || "long";
+    return { type: "date", params };
+  }
+
+  // Table of contents
+  if (line === "@toc") {
+    return { type: "toc" };
+  }
+
   // Raw LaTeX passthrough block
   if (line === "@latex") {
     return { type: "latex" };
@@ -198,6 +209,10 @@ function renderBlock(type: string | null, lines: string[]): string {
       return renderLatexPassthrough(lines);
     case "lorem":
       return renderLorem(lines);
+    case "date":
+      return renderDate(lines);
+    case "toc":
+      return renderToc();
     case "hr":
       return "<hr />";
     default:
@@ -439,6 +454,35 @@ function formatInline(text: string): string {
   result = result.replace(/@raw\(([^)]+)\)/g, '<code class="raw-latex" title="Raw LaTeX: $1">⚡$1</code>');
 
   return result;
+}
+
+/**
+ * Render current date
+ */
+function renderDate(lines: string[]): string {
+  const format = lines[0]?.toLowerCase() || "long";
+  const now = new Date();
+
+  let dateStr: string;
+  if (format === "iso") {
+    dateStr = now.toISOString().split("T")[0];
+  } else if (format === "short") {
+    dateStr = now.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+  } else {
+    dateStr = now.toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" });
+  }
+
+  return `<span class="date-value">${dateStr}</span>`;
+}
+
+/**
+ * Render table of contents placeholder
+ */
+function renderToc(): string {
+  return `<div class="toc-placeholder">
+    <p><strong>Table of Contents</strong></p>
+    <p class="text-muted-foreground text-sm italic">(Auto-generated from headings on export)</p>
+  </div>`;
 }
 
 /**

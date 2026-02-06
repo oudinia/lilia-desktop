@@ -249,6 +249,16 @@ export function exportToLatex(lmlContent: string): string {
       const count = parseInt(typeMatch?.[2] || "3", 10);
       output.push(generateLoremForLatex(type, count));
     }
+    // Date
+    else if (trimmed.startsWith("@date")) {
+      const format = trimmed.match(/\((\w+)\)/)?.[1]?.toLowerCase() || "long";
+      output.push(formatDateForLatex(format));
+    }
+    // Table of contents
+    else if (trimmed === "@toc") {
+      output.push("\\tableofcontents");
+      output.push("\\newpage");
+    }
     // Regular paragraph
     else if (trimmed && !trimmed.startsWith("@")) {
       output.push(convertInlineToLatex(line));
@@ -496,6 +506,19 @@ export function exportToMarkdown(lmlContent: string): string {
       output.push(generateLoremForLatex(type, count));
       output.push("");
     }
+    // Date
+    else if (trimmed.startsWith("@date")) {
+      const format = trimmed.match(/\((\w+)\)/)?.[1]?.toLowerCase() || "long";
+      output.push(formatDateForMarkdown(format));
+      output.push("");
+    }
+    // Table of contents
+    else if (trimmed === "@toc") {
+      output.push("## Table of Contents");
+      output.push("");
+      output.push("*[Auto-generated on export]*");
+      output.push("");
+    }
     // Regular content
     else if (trimmed) {
       output.push(line);
@@ -639,4 +662,20 @@ function generateRandomSentence(): string {
   }
   words[0] = words[0].charAt(0).toUpperCase() + words[0].slice(1);
   return words.join(" ") + ".";
+}
+
+// Date formatting
+function formatDateForLatex(format: string): string {
+  const now = new Date();
+  if (format === "iso") {
+    return now.toISOString().split("T")[0];
+  } else if (format === "short") {
+    return now.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+  } else {
+    return now.toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" });
+  }
+}
+
+function formatDateForMarkdown(format: string): string {
+  return formatDateForLatex(format);
 }
