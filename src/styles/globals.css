@@ -298,3 +298,22 @@
 .lml-preview del {
   @apply text-muted-foreground;
 }
+
+/* Todo markers */
+.lml-preview .todo-marker {
+  @apply inline-flex items-center gap-1 bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-400 px-2 py-0.5 rounded text-sm;
+}
+
+.lml-preview .todo-icon {
+  @apply text-xs;
+}
+
+/* Hyperlinks */
+.lml-preview .lml-link {
+  @apply text-primary underline hover:no-underline;
+}
+
+/* Keyboard shortcuts */
+.lml-preview .keyboard-shortcut {
+  @apply inline-block bg-muted border border-border rounded px-1.5 py-0.5 text-xs font-mono shadow-sm;
+}

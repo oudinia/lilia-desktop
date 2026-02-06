@@ -403,6 +403,30 @@ export function registerLmlLanguage(monaco: Monaco) {
           documentation: "Strikethrough text",
           range,
         },
+        {
+          label: "@todo",
+          kind: monaco.languages.CompletionItemKind.Snippet,
+          insertText: "@todo(${1:task description})",
+          insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
+          documentation: "Todo marker for draft tracking",
+          range,
+        },
+        {
+          label: "@link",
+          kind: monaco.languages.CompletionItemKind.Snippet,
+          insertText: "@link(${1:text}, ${2:https://example.com})",
+          insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
+          documentation: "Hyperlink with custom text",
+          range,
+        },
+        {
+          label: "@kbd",
+          kind: monaco.languages.CompletionItemKind.Snippet,
+          insertText: "@kbd(${1:Ctrl+S})",
+          insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
+          documentation: "Keyboard shortcut styling",
+          range,
+        },
         // Greek letters
         ...greekLetters.map((letter) => ({
           label: `\\${letter}`,

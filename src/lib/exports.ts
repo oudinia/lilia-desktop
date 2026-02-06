@@ -543,8 +543,16 @@ export function exportToMarkdown(lmlContent: string): string {
     }
     // Regular content
     else if (trimmed) {
-      // Handle inline footnotes in content
-      output.push(line.replace(/@fn\(([^)]+)\)/g, "[^$1]"));
+      // Handle inline directives in content
+      let processed = line
+        .replace(/@fn\(([^)]+)\)/g, "[^$1]")
+        .replace(/@todo\(([^)]+)\)/g, "**TODO:** $1")
+        .replace(/@link\(([^,)]+),\s*([^)]+)\)/g, "[$1]($2)")
+        .replace(/@link\(([^)]+)\)/g, "<$1>")
+        .replace(/@kbd\(([^)]+)\)/g, "`$1`")
+        .replace(/@(?:hl|highlight)\(([^)]+)\)/g, "==$1==")
+        .replace(/@(?:del|strike)\(([^)]+)\)/g, "~~$1~~");
+      output.push(processed);
     } else {
       output.push("");
     }
@@ -596,6 +604,13 @@ function convertInlineToLatex(text: string): string {
     .replace(/@(?:note|comment)\(([^)]+)\)/g, "% NOTE: $1")
     // Strikethrough - use soul package
     .replace(/@(?:del|strike)\(([^)]+)\)/g, "\\st{$1}")
+    // Todo markers - use marginpar for visibility
+    .replace(/@todo\(([^)]+)\)/g, "\\marginpar{\\small\\textbf{TODO:} $1}")
+    // Hyperlinks
+    .replace(/@link\(([^,)]+),\s*([^)]+)\)/g, "\\href{$2}{$1}")
+    .replace(/@link\(([^)]+)\)/g, "\\url{$1}")
+    // Keyboard shortcuts
+    .replace(/@kbd\(([^)]+)\)/g, "\\texttt{\\small[$1]}")
     .replace(/\*\*(.+?)\*\*/g, "\\textbf{$1}")
     .replace(/\*(.+?)\*/g, "\\textit{$1}")
     .replace(/`(.+?)`/g, "\\texttt{$1}")

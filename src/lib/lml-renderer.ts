@@ -473,6 +473,16 @@ function formatInline(text: string): string {
   // Strikethrough: @del(text) or @strike(text)
   result = result.replace(/@(?:del|strike)\(([^)]+)\)/g, '<del>$1</del>');
 
+  // Todo markers: @todo(text) - for draft tracking
+  result = result.replace(/@todo\(([^)]+)\)/g, '<span class="todo-marker"><span class="todo-icon">☐</span> $1</span>');
+
+  // Hyperlinks: @link(text, url) or @link(url)
+  result = result.replace(/@link\(([^,)]+),\s*([^)]+)\)/g, '<a href="$2" class="lml-link">$1</a>');
+  result = result.replace(/@link\(([^)]+)\)/g, '<a href="$1" class="lml-link">$1</a>');
+
+  // Keyboard shortcuts: @kbd(key) - for keyboard shortcut styling
+  result = result.replace(/@kbd\(([^)]+)\)/g, '<kbd class="keyboard-shortcut">$1</kbd>');
+
   return result;
 }
 
