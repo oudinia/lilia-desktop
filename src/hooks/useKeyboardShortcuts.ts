@@ -11,7 +11,7 @@ export function useKeyboardShortcuts() {
     setSettingsOpen,
     setFindReplaceOpen,
   } = useAppStore();
-  const { theme, setTheme } = useSettingsStore();
+  const { theme, setTheme, toggleOutline } = useSettingsStore();
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -47,6 +47,10 @@ export function useKeyboardShortcuts() {
         e.preventDefault();
         setTheme(theme === "dark" ? "light" : "dark");
       }
+      if (isMod && isShift && e.key === "O") {
+        e.preventDefault();
+        toggleOutline();
+      }
 
       // Settings
       if (isMod && e.key === ",") {
@@ -72,5 +76,6 @@ export function useKeyboardShortcuts() {
     setFindReplaceOpen,
     theme,
     setTheme,
+    toggleOutline,
   ]);
 }

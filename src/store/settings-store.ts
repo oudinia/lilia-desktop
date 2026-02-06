@@ -21,6 +21,9 @@ interface SettingsState {
   autoSave: boolean;
   autoSaveDelay: number;
 
+  // UI panels
+  showOutline: boolean;
+
   // Actions
   setEditorFontSize: (size: number) => void;
   setEditorFontFamily: (family: string) => void;
@@ -33,6 +36,8 @@ interface SettingsState {
   setPreviewFontSize: (size: number) => void;
   setAutoSave: (enabled: boolean) => void;
   setAutoSaveDelay: (delay: number) => void;
+  setShowOutline: (show: boolean) => void;
+  toggleOutline: () => void;
   setAll: (settings: Partial<SettingsState>) => void;
   save: () => Promise<void>;
 }
@@ -49,6 +54,7 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
   previewFontSize: 16,
   autoSave: false,
   autoSaveDelay: 5000,
+  showOutline: false,
 
   setEditorFontSize: (size) => {
     set({ editorFontSize: size });
@@ -105,6 +111,16 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
     get().save();
   },
 
+  setShowOutline: (show) => {
+    set({ showOutline: show });
+    get().save();
+  },
+
+  toggleOutline: () => {
+    set((state) => ({ showOutline: !state.showOutline }));
+    get().save();
+  },
+
   setAll: (settings) => {
     set(settings);
   },
@@ -125,6 +141,7 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
           previewFontSize: state.previewFontSize,
           autoSave: state.autoSave,
           autoSaveDelay: state.autoSaveDelay,
+          showOutline: state.showOutline,
         },
       });
     } catch (error) {

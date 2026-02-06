@@ -32,7 +32,7 @@ export function MenuBar() {
     showToast,
     ui,
   } = useAppStore();
-  const { theme, setTheme } = useSettingsStore();
+  const { theme, setTheme, showOutline, toggleOutline } = useSettingsStore();
 
   const handleExport = async (format: "latex" | "html" | "markdown") => {
     const extensions: Record<string, string[]> = {
@@ -194,6 +194,11 @@ export function MenuBar() {
       <MenubarMenu>
         <MenubarTrigger className="font-medium">View</MenubarTrigger>
         <MenubarContent>
+          <MenubarItem onClick={toggleOutline}>
+            {showOutline ? "Hide" : "Show"} Outline
+            <MenubarShortcut>Ctrl+Shift+O</MenubarShortcut>
+          </MenubarItem>
+          <MenubarSeparator />
           <MenubarItem onClick={() => setTheme(theme === "dark" ? "light" : "dark")}>
             Toggle Theme
             <MenubarShortcut>Ctrl+T</MenubarShortcut>

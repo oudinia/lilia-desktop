@@ -5,6 +5,7 @@ import { Editor } from "./components/Editor";
 import { Preview } from "./components/Preview";
 import { StatusBar } from "./components/StatusBar";
 import { Toolbar } from "./components/Toolbar";
+import { OutlinePanel } from "./components/OutlinePanel";
 import { Toaster } from "./components/ui/Toaster";
 import { SettingsDialog } from "./components/SettingsDialog";
 import { FindReplaceDialog } from "./components/FindReplaceDialog";
@@ -15,7 +16,7 @@ import { useKeyboardShortcuts } from "./hooks/useKeyboardShortcuts";
 import { useFileDrop } from "./hooks/useFileDrop";
 
 function App() {
-  const { theme } = useSettingsStore();
+  const { theme, showOutline } = useSettingsStore();
   const { loadSettings } = useAppStore();
 
   // Initialize keyboard shortcuts
@@ -45,8 +46,20 @@ function App() {
       {/* Main Content */}
       <div className="flex-1 overflow-hidden">
         <PanelGroup direction="horizontal" className="h-full">
+          {/* Outline Panel (collapsible) */}
+          {showOutline && (
+            <>
+              <Panel defaultSize={15} minSize={10} maxSize={25}>
+                <div className="h-full border-r bg-muted/20">
+                  <OutlinePanel />
+                </div>
+              </Panel>
+              <PanelResizeHandle className="w-1 bg-border hover:bg-primary/50 transition-colors cursor-col-resize" />
+            </>
+          )}
+
           {/* Editor Panel */}
-          <Panel defaultSize={50} minSize={30}>
+          <Panel defaultSize={showOutline ? 42 : 50} minSize={30}>
             <Editor />
           </Panel>
 
@@ -54,7 +67,7 @@ function App() {
           <PanelResizeHandle className="w-1 bg-border hover:bg-primary/50 transition-colors cursor-col-resize" />
 
           {/* Preview Panel */}
-          <Panel defaultSize={50} minSize={30}>
+          <Panel defaultSize={showOutline ? 43 : 50} minSize={30}>
             <Preview />
           </Panel>
         </PanelGroup>
