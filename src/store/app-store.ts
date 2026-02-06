@@ -22,6 +22,7 @@ interface UIState {
   settingsOpen: boolean;
   findReplaceOpen: boolean;
   aboutOpen: boolean;
+  keyboardShortcutsOpen: boolean;
   recentFiles: string[];
 }
 
@@ -48,6 +49,7 @@ interface AppState {
   setSettingsOpen: (open: boolean) => void;
   setFindReplaceOpen: (open: boolean) => void;
   setAboutOpen: (open: boolean) => void;
+  setKeyboardShortcutsOpen: (open: boolean) => void;
   loadRecentFiles: () => Promise<void>;
   loadSettings: () => Promise<void>;
 
@@ -121,6 +123,7 @@ export const useAppStore = create<AppState>((set, get) => ({
     settingsOpen: false,
     findReplaceOpen: false,
     aboutOpen: false,
+    keyboardShortcutsOpen: false,
     recentFiles: [],
   },
   toasts: [],
@@ -295,6 +298,12 @@ export const useAppStore = create<AppState>((set, get) => ({
   setAboutOpen: (open) => {
     set((state) => ({
       ui: { ...state.ui, aboutOpen: open },
+    }));
+  },
+
+  setKeyboardShortcutsOpen: (open) => {
+    set((state) => ({
+      ui: { ...state.ui, keyboardShortcutsOpen: open },
     }));
   },
 

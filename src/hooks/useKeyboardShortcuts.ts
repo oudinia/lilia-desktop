@@ -10,6 +10,7 @@ export function useKeyboardShortcuts() {
     saveDocumentAs,
     setSettingsOpen,
     setFindReplaceOpen,
+    setKeyboardShortcutsOpen,
   } = useAppStore();
   const { theme, setTheme, toggleOutline } = useSettingsStore();
 
@@ -58,10 +59,17 @@ export function useKeyboardShortcuts() {
         setSettingsOpen(true);
       }
 
+      // Keyboard shortcuts help (F1 or ?)
+      if (e.key === "F1" || (e.key === "?" && !isMod)) {
+        e.preventDefault();
+        setKeyboardShortcutsOpen(true);
+      }
+
       // Close dialogs with Escape
       if (e.key === "Escape") {
         setSettingsOpen(false);
         setFindReplaceOpen(false);
+        setKeyboardShortcutsOpen(false);
       }
     };
 
@@ -74,6 +82,7 @@ export function useKeyboardShortcuts() {
     saveDocumentAs,
     setSettingsOpen,
     setFindReplaceOpen,
+    setKeyboardShortcutsOpen,
     theme,
     setTheme,
     toggleOutline,

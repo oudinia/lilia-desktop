@@ -29,6 +29,7 @@ export function MenuBar() {
     setSettingsOpen,
     setFindReplaceOpen,
     setAboutOpen,
+    setKeyboardShortcutsOpen,
     showToast,
     ui,
   } = useAppStore();
@@ -253,7 +254,10 @@ export function MenuBar() {
         <MenubarTrigger className="font-medium">Help</MenubarTrigger>
         <MenubarContent>
           <MenubarItem>Documentation</MenubarItem>
-          <MenubarItem>Keyboard Shortcuts</MenubarItem>
+          <MenubarItem onClick={() => setKeyboardShortcutsOpen(true)}>
+            Keyboard Shortcuts
+            <MenubarShortcut>F1</MenubarShortcut>
+          </MenubarItem>
           <MenubarSeparator />
           <MenubarItem onClick={() => setSettingsOpen(true)}>
             Settings

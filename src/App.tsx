@@ -10,6 +10,7 @@ import { Toaster } from "./components/ui/Toaster";
 import { SettingsDialog } from "./components/SettingsDialog";
 import { FindReplaceDialog } from "./components/FindReplaceDialog";
 import { AboutDialog } from "./components/AboutDialog";
+import { KeyboardShortcutsDialog } from "./components/KeyboardShortcutsDialog";
 import { useAppStore } from "./store/app-store";
 import { useSettingsStore } from "./store/settings-store";
 import { useKeyboardShortcuts } from "./hooks/useKeyboardShortcuts";
@@ -80,6 +81,7 @@ function App() {
       <SettingsDialog />
       <FindReplaceDialog />
       <AboutDialog />
+      <KeyboardShortcutsDialog />
 
       {/* Toast notifications */}
       <Toaster />
