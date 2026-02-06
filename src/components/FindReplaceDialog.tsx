@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import {
   Dialog,
   DialogContent,
@@ -10,6 +10,13 @@ import { Button } from "./ui/Button";
 import { Label } from "./ui/Label";
 import { Switch } from "./ui/Switch";
 import { useAppStore } from "@/store/app-store";
+import {
+  findInEditor,
+  selectMatch,
+  replaceMatch,
+  replaceAllMatches,
+} from "./Editor";
+import type { editor } from "monaco-editor";
 
 export function FindReplaceDialog() {
   const { ui, setFindReplaceOpen } = useAppStore();
@@ -17,32 +24,107 @@ export function FindReplaceDialog() {
   const [replaceText, setReplaceText] = useState("");
   const [caseSensitive, setCaseSensitive] = useState(false);
   const [useRegex, setUseRegex] = useState(false);
-  const [matchCount, setMatchCount] = useState(0);
-  const [currentMatch, setCurrentMatch] = useState(0);
+  const [wholeWord, setWholeWord] = useState(false);
+  const [matches, setMatches] = useState<editor.FindMatch[]>([]);
+  const [currentMatch, setCurrentMatch] = useState(-1);
+
+  // Search when text or options change
+  const performSearch = useCallback(() => {
+    if (!findText) {
+      setMatches([]);
+      setCurrentMatch(-1);
+      return;
+    }
+
+    const result = findInEditor(findText, { caseSensitive, useRegex, wholeWord });
+    setMatches(result.matches);
+    setCurrentMatch(result.currentIndex);
+
+    // Select first match if found
+    if (result.matches.length > 0) {
+      selectMatch(result.matches[0]);
+    }
+  }, [findText, caseSensitive, useRegex, wholeWord]);
+
+  // Debounced search
+  useEffect(() => {
+    const timeout = setTimeout(performSearch, 150);
+    return () => clearTimeout(timeout);
+  }, [performSearch]);
+
+  // Clear state when dialog closes
+  useEffect(() => {
+    if (!ui.findReplaceOpen) {
+      setFindText("");
+      setReplaceText("");
+      setMatches([]);
+      setCurrentMatch(-1);
+    }
+  }, [ui.findReplaceOpen]);
 
   const handleFindNext = () => {
-    // TODO: Implement find next in editor
-    console.log("Find next:", findText);
+    if (matches.length === 0) return;
+    const nextIndex = (currentMatch + 1) % matches.length;
+    setCurrentMatch(nextIndex);
+    selectMatch(matches[nextIndex]);
   };
 
   const handleFindPrevious = () => {
-    // TODO: Implement find previous in editor
-    console.log("Find previous:", findText);
+    if (matches.length === 0) return;
+    const prevIndex = currentMatch <= 0 ? matches.length - 1 : currentMatch - 1;
+    setCurrentMatch(prevIndex);
+    selectMatch(matches[prevIndex]);
   };
 
   const handleReplace = () => {
-    // TODO: Implement replace in editor
-    console.log("Replace:", findText, "with:", replaceText);
+    if (matches.length === 0 || currentMatch < 0) return;
+
+    replaceMatch(matches[currentMatch], replaceText);
+
+    // Re-search after replace
+    setTimeout(() => {
+      const result = findInEditor(findText, { caseSensitive, useRegex, wholeWord });
+      setMatches(result.matches);
+
+      // Stay at current index or move to next available
+      const newIndex = Math.min(currentMatch, result.matches.length - 1);
+      setCurrentMatch(newIndex >= 0 ? newIndex : -1);
+
+      if (newIndex >= 0 && result.matches[newIndex]) {
+        selectMatch(result.matches[newIndex]);
+      }
+    }, 50);
   };
 
   const handleReplaceAll = () => {
-    // TODO: Implement replace all in editor
-    console.log("Replace all:", findText, "with:", replaceText);
+    if (!findText) return;
+
+    const count = replaceAllMatches(findText, replaceText, { caseSensitive, useRegex });
+    setMatches([]);
+    setCurrentMatch(-1);
+
+    if (count > 0) {
+      // Could show a toast notification here
+      console.log(`Replaced ${count} occurrence(s)`);
+    }
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter") {
+      if (e.shiftKey) {
+        handleFindPrevious();
+      } else {
+        handleFindNext();
+      }
+      e.preventDefault();
+    } else if (e.key === "Escape") {
+      setFindReplaceOpen(false);
+    }
   };
 
   return (
     <Dialog open={ui.findReplaceOpen} onOpenChange={setFindReplaceOpen}>
-      <DialogContent className="max-w-md">
+      <DialogContent className="max-w-md" onKeyDown={handleKeyDown}>
         <DialogHeader>
           <DialogTitle>Find and Replace</DialogTitle>
         </DialogHeader>
@@ -58,19 +140,38 @@ export function FindReplaceDialog() {
                 onChange={(e) => setFindText(e.target.value)}
                 placeholder="Search..."
                 className="flex-1"
+                autoFocus
               />
-              <Button variant="outline" size="sm" onClick={handleFindPrevious}>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleFindPrevious}
+                disabled={matches.length === 0}
+                title="Previous match (Shift+Enter)"
+              >
                 ↑
               </Button>
-              <Button variant="outline" size="sm" onClick={handleFindNext}>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleFindNext}
+                disabled={matches.length === 0}
+                title="Next match (Enter)"
+              >
                 ↓
               </Button>
             </div>
-            {matchCount > 0 && (
-              <p className="text-sm text-muted-foreground">
-                {currentMatch} of {matchCount} matches
-              </p>
-            )}
+            <p className="text-sm text-muted-foreground">
+              {findText ? (
+                matches.length > 0 ? (
+                  `${currentMatch + 1} of ${matches.length} matches`
+                ) : (
+                  "No matches"
+                )
+              ) : (
+                "Enter text to search"
+              )}
+            </p>
           </div>
 
           {/* Replace */}
@@ -83,10 +184,20 @@ export function FindReplaceDialog() {
               placeholder="Replace with..."
             />
             <div className="flex gap-2">
-              <Button variant="outline" size="sm" onClick={handleReplace}>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleReplace}
+                disabled={matches.length === 0}
+              >
                 Replace
               </Button>
-              <Button variant="outline" size="sm" onClick={handleReplaceAll}>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleReplaceAll}
+                disabled={!findText}
+              >
                 Replace All
               </Button>
             </div>
@@ -95,15 +206,28 @@ export function FindReplaceDialog() {
           {/* Options */}
           <div className="space-y-3 pt-2 border-t">
             <div className="flex items-center justify-between">
-              <Label>Case Sensitive</Label>
+              <Label htmlFor="case-sensitive">Case Sensitive</Label>
               <Switch
+                id="case-sensitive"
                 checked={caseSensitive}
                 onCheckedChange={setCaseSensitive}
               />
             </div>
             <div className="flex items-center justify-between">
-              <Label>Use Regular Expression</Label>
-              <Switch checked={useRegex} onCheckedChange={setUseRegex} />
+              <Label htmlFor="whole-word">Whole Word</Label>
+              <Switch
+                id="whole-word"
+                checked={wholeWord}
+                onCheckedChange={setWholeWord}
+              />
+            </div>
+            <div className="flex items-center justify-between">
+              <Label htmlFor="use-regex">Use Regular Expression</Label>
+              <Switch
+                id="use-regex"
+                checked={useRegex}
+                onCheckedChange={setUseRegex}
+              />
             </div>
           </div>
         </div>

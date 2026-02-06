@@ -4,7 +4,7 @@ import type { editor, MarkerSeverity } from "monaco-editor";
 import { useAppStore } from "@/store/app-store";
 import { useSettingsStore } from "@/store/settings-store";
 import { registerLmlLanguage } from "@/lib/lml-language";
-import { validateLml, ValidationMessage } from "@/lib/lml-validator";
+import { validateLml } from "@/lib/lml-validator";
 
 // Global editor reference for external access (symbol insertion, etc.)
 let globalEditorRef: editor.IStandaloneCodeEditor | null = null;
@@ -12,6 +12,10 @@ let globalMonacoRef: typeof import("monaco-editor") | null = null;
 
 export function getEditorInstance() {
   return globalEditorRef;
+}
+
+export function getMonacoInstance() {
+  return globalMonacoRef;
 }
 
 export function insertTextAtCursor(text: string) {
@@ -29,6 +33,92 @@ export function insertTextAtCursor(text: string) {
     },
   ]);
   editor.focus();
+}
+
+export interface FindResult {
+  matches: editor.FindMatch[];
+  currentIndex: number;
+}
+
+export function findInEditor(
+  searchText: string,
+  options: { caseSensitive?: boolean; useRegex?: boolean; wholeWord?: boolean } = {}
+): FindResult {
+  const editorInstance = globalEditorRef;
+  const monaco = globalMonacoRef;
+  if (!editorInstance || !monaco) return { matches: [], currentIndex: -1 };
+
+  const model = editorInstance.getModel();
+  if (!model) return { matches: [], currentIndex: -1 };
+
+  const matches = model.findMatches(
+    searchText,
+    true, // searchOnlyEditableRange
+    options.useRegex ?? false,
+    options.caseSensitive ?? false,
+    options.wholeWord ? "\\b" : null,
+    true // captureMatches
+  );
+
+  return { matches, currentIndex: matches.length > 0 ? 0 : -1 };
+}
+
+export function selectMatch(match: editor.FindMatch) {
+  const editorInstance = globalEditorRef;
+  if (!editorInstance) return;
+
+  editorInstance.setSelection(match.range);
+  editorInstance.revealRangeInCenter(match.range);
+  editorInstance.focus();
+}
+
+export function replaceMatch(match: editor.FindMatch, replaceText: string) {
+  const editorInstance = globalEditorRef;
+  if (!editorInstance) return;
+
+  editorInstance.executeEdits("replace", [
+    {
+      range: match.range,
+      text: replaceText,
+      forceMoveMarkers: true,
+    },
+  ]);
+}
+
+export function replaceAllMatches(
+  searchText: string,
+  replaceText: string,
+  options: { caseSensitive?: boolean; useRegex?: boolean } = {}
+): number {
+  const editorInstance = globalEditorRef;
+  if (!editorInstance) return 0;
+
+  const model = editorInstance.getModel();
+  if (!model) return 0;
+
+  const matches = model.findMatches(
+    searchText,
+    true,
+    options.useRegex ?? false,
+    options.caseSensitive ?? false,
+    null,
+    true
+  );
+
+  if (matches.length === 0) return 0;
+
+  // Replace from end to start to maintain positions
+  const edits = matches
+    .slice()
+    .reverse()
+    .map((match) => ({
+      range: match.range,
+      text: replaceText,
+      forceMoveMarkers: true,
+    }));
+
+  editorInstance.executeEdits("replace-all", edits);
+  return matches.length;
 }
 
 export function Editor() {
