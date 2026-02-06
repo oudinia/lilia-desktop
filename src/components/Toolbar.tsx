@@ -11,6 +11,12 @@ import {
   Minus,
   Calculator,
   ChevronDown,
+  AlertCircle,
+  Type,
+  Highlighter,
+  Link,
+  Hash,
+  MoreHorizontal,
 } from "lucide-react";
 import { Button } from "./ui/Button";
 import {
@@ -84,6 +90,28 @@ export function Toolbar() {
         tooltip="Horizontal Rule"
         onClick={() => insertTextAtCursor("\n---\n")}
       />
+
+      <Separator orientation="vertical" className="h-6 mx-1" />
+
+      {/* Quick Inline Formatting */}
+      <ToolbarButton
+        icon={<Highlighter className="h-4 w-4" />}
+        tooltip="Highlight"
+        onClick={() => insertTextAtCursor("@hl(highlighted)")}
+      />
+      <ToolbarButton
+        icon={<Link className="h-4 w-4" />}
+        tooltip="Link"
+        onClick={() => insertTextAtCursor("@link(text, https://)")}
+      />
+      <ToolbarButton
+        icon={<AlertCircle className="h-4 w-4" />}
+        tooltip="Alert Box"
+        onClick={() => insertTextAtCursor("\n@alert(info)\nYour alert message here.\n")}
+      />
+
+      {/* More Directives */}
+      <DirectivePalette />
 
       <Separator orientation="vertical" className="h-6 mx-1" />
 
@@ -241,3 +269,74 @@ const arrowSymbols = [
   { name: "longleftarrow", latex: "\\longleftarrow", display: "⟵" },
   { name: "hookrightarrow", latex: "\\hookrightarrow", display: "↪" },
 ];
+
+// Additional LML directives
+const lmlDirectives = [
+  { category: "Blocks", items: [
+    { name: "Theorem", insert: "\n@theorem(label: thm:, title: Theorem Title)\nTheorem statement.\n" },
+    { name: "Definition", insert: "\n@definition(label: def:, title: Definition Title)\nDefinition text.\n" },
+    { name: "Proof", insert: "\n@proof\nProof content.$\\square$\n" },
+    { name: "Abstract", insert: "\n@abstract\nAbstract content here.\n" },
+    { name: "Epigraph", insert: "\n@epigraph\nA wise quote here.\n-- Author Name\n" },
+    { name: "Drop Cap", insert: "\n@dropcap\nOnce upon a time...\n" },
+  ]},
+  { category: "Inline", items: [
+    { name: "Todo", insert: "@todo(task)" },
+    { name: "Footnote", insert: "@fn(1)" },
+    { name: "Abbr", insert: "@abbr(abbr, full text)" },
+    { name: "Kbd", insert: "@kbd(Ctrl+S)" },
+    { name: "Color", insert: "@color(text, red)" },
+    { name: "Small Caps", insert: "@sc(text)" },
+  ]},
+  { category: "Layout", items: [
+    { name: "Center", insert: "\n@center\nCentered text.\n" },
+    { name: "Divider", insert: "@divider(stars)" },
+    { name: "Page Break", insert: "@pagebreak" },
+    { name: "Lorem", insert: "@lorem(paragraphs: 3)" },
+    { name: "Date", insert: "@date(long)" },
+    { name: "TOC", insert: "@toc" },
+  ]},
+];
+
+function DirectivePalette() {
+  const [open, setOpen] = useState(false);
+
+  const handleInsert = (text: string) => {
+    insertTextAtCursor(text);
+    setOpen(false);
+  };
+
+  return (
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>
+        <Button variant="ghost" size="sm" className="h-8 px-2 text-xs gap-1">
+          <MoreHorizontal className="h-4 w-4" />
+          More
+          <ChevronDown className="h-3 w-3" />
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent className="w-64 p-2" align="start">
+        {lmlDirectives.map((section) => (
+          <div key={section.category} className="mb-2">
+            <div className="text-xs font-semibold text-muted-foreground mb-1 px-2">
+              {section.category}
+            </div>
+            <div className="grid grid-cols-2 gap-1">
+              {section.items.map((item) => (
+                <Button
+                  key={item.name}
+                  variant="ghost"
+                  size="sm"
+                  className="h-7 justify-start text-xs"
+                  onClick={() => handleInsert(item.insert)}
+                >
+                  {item.name}
+                </Button>
+              ))}
+            </div>
+          </div>
+        ))}
+      </PopoverContent>
+    </Popover>
+  );
+}
