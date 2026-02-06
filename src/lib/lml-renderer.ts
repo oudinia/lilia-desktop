@@ -483,6 +483,21 @@ function formatInline(text: string): string {
   // Keyboard shortcuts: @kbd(key) - for keyboard shortcut styling
   result = result.replace(/@kbd\(([^)]+)\)/g, '<kbd class="keyboard-shortcut">$1</kbd>');
 
+  // Abbreviation with tooltip: @abbr(abbr, full text)
+  result = result.replace(/@abbr\(([^,]+),\s*([^)]+)\)/g, '<abbr title="$2" class="lml-abbr">$1</abbr>');
+
+  // Subscript: @sub(text)
+  result = result.replace(/@sub\(([^)]+)\)/g, '<sub>$1</sub>');
+
+  // Superscript: @sup(text)
+  result = result.replace(/@sup\(([^)]+)\)/g, '<sup>$1</sup>');
+
+  // Small caps: @sc(text)
+  result = result.replace(/@sc\(([^)]+)\)/g, '<span class="small-caps">$1</span>');
+
+  // Colored text: @color(text, colorname)
+  result = result.replace(/@color\(([^,]+),\s*([^)]+)\)/g, '<span style="color: $2">$1</span>');
+
   return result;
 }
 

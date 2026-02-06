@@ -46,6 +46,7 @@ export function exportToLatex(lmlContent: string): string {
   output.push("\\usepackage{listings}");
   output.push("\\usepackage{hyperref}");
   output.push("\\usepackage{soul}"); // For highlight (\hl) and strikethrough (\st)
+  output.push("\\usepackage{xcolor}"); // For colored text
 
   if (fontFamily === "charter") {
     output.push("\\usepackage{charter}");
@@ -551,7 +552,12 @@ export function exportToMarkdown(lmlContent: string): string {
         .replace(/@link\(([^)]+)\)/g, "<$1>")
         .replace(/@kbd\(([^)]+)\)/g, "`$1`")
         .replace(/@(?:hl|highlight)\(([^)]+)\)/g, "==$1==")
-        .replace(/@(?:del|strike)\(([^)]+)\)/g, "~~$1~~");
+        .replace(/@(?:del|strike)\(([^)]+)\)/g, "~~$1~~")
+        .replace(/@abbr\(([^,]+),\s*([^)]+)\)/g, "$1") // Just the abbreviation in Markdown
+        .replace(/@sub\(([^)]+)\)/g, "<sub>$1</sub>") // HTML subscript
+        .replace(/@sup\(([^)]+)\)/g, "<sup>$1</sup>") // HTML superscript
+        .replace(/@sc\(([^)]+)\)/g, "$1") // No small caps in Markdown
+        .replace(/@color\(([^,]+),\s*([^)]+)\)/g, "$1"); // No color in Markdown
       output.push(processed);
     } else {
       output.push("");
@@ -611,6 +617,16 @@ function convertInlineToLatex(text: string): string {
     .replace(/@link\(([^)]+)\)/g, "\\url{$1}")
     // Keyboard shortcuts
     .replace(/@kbd\(([^)]+)\)/g, "\\texttt{\\small[$1]}")
+    // Abbreviation - just use the abbreviation text
+    .replace(/@abbr\(([^,]+),\s*([^)]+)\)/g, "$1")
+    // Subscript
+    .replace(/@sub\(([^)]+)\)/g, "\\textsubscript{$1}")
+    // Superscript
+    .replace(/@sup\(([^)]+)\)/g, "\\textsuperscript{$1}")
+    // Small caps
+    .replace(/@sc\(([^)]+)\)/g, "\\textsc{$1}")
+    // Colored text - use xcolor package
+    .replace(/@color\(([^,]+),\s*([^)]+)\)/g, "\\textcolor{$2}{$1}")
     .replace(/\*\*(.+?)\*\*/g, "\\textbf{$1}")
     .replace(/\*(.+?)\*/g, "\\textit{$1}")
     .replace(/`(.+?)`/g, "\\texttt{$1}")

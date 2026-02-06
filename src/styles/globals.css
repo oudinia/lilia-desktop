@@ -317,3 +317,13 @@
 .lml-preview .keyboard-shortcut {
   @apply inline-block bg-muted border border-border rounded px-1.5 py-0.5 text-xs font-mono shadow-sm;
 }
+
+/* Abbreviations */
+.lml-preview .lml-abbr {
+  @apply border-b border-dotted border-muted-foreground cursor-help;
+}
+
+/* Small caps */
+.lml-preview .small-caps {
+  font-variant: small-caps;
+}
