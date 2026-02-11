@@ -1,10 +1,63 @@
-import { useMemo } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { useAppStore } from "@/store/app-store";
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
 } from "./ui/Popover";
+
+function SaveIndicator({
+  status,
+  lastSaved,
+}: {
+  status: "saved" | "saving" | "unsaved";
+  lastSaved: Date | null;
+}) {
+  const [, setTick] = useState(0);
+
+  // Re-render every 30s to update "saved X ago" text
+  useEffect(() => {
+    if (status !== "saved" || !lastSaved) return;
+    const id = setInterval(() => setTick((t) => t + 1), 30000);
+    return () => clearInterval(id);
+  }, [status, lastSaved]);
+
+  if (status === "saving") {
+    return (
+      <span className="flex items-center gap-1 text-blue-400">
+        <span className="inline-block h-2 w-2 rounded-full bg-blue-400 animate-pulse" />
+        Saving...
+      </span>
+    );
+  }
+
+  if (status === "unsaved") {
+    return (
+      <span className="flex items-center gap-1 text-yellow-500">
+        <span className="inline-block h-2 w-2 rounded-full bg-yellow-500" />
+        Unsaved
+      </span>
+    );
+  }
+
+  // status === "saved"
+  const timeAgo = lastSaved ? formatTimeAgo(lastSaved) : "";
+  return (
+    <span className="flex items-center gap-1 text-green-500" title={lastSaved?.toLocaleTimeString()}>
+      <span className="inline-block h-2 w-2 rounded-full bg-green-500" />
+      Saved{timeAgo ? ` ${timeAgo}` : ""}
+    </span>
+  );
+}
+
+function formatTimeAgo(date: Date): string {
+  const seconds = Math.floor((Date.now() - date.getTime()) / 1000);
+  if (seconds < 10) return "";
+  if (seconds < 60) return `${seconds}s ago`;
+  const minutes = Math.floor(seconds / 60);
+  if (minutes < 60) return `${minutes}m ago`;
+  return `${Math.floor(minutes / 60)}h ago`;
+}
 
 interface DocumentStats {
   wordCount: number;
@@ -180,7 +233,10 @@ export function StatusBar() {
 
         <span>~{stats.readingMinutes} min read</span>
         <span>{stats.headingCount} sections</span>
-        {document.isDirty && <span className="text-yellow-500">● Modified</span>}
+        <SaveIndicator
+          status={document.saveStatus}
+          lastSaved={document.lastSaved}
+        />
         <span className="font-medium">{document.fileName}</span>
       </div>
     </div>

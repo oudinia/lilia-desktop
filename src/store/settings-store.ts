@@ -21,6 +21,9 @@ interface SettingsState {
   autoSave: boolean;
   autoSaveDelay: number;
 
+  // Spell check
+  spellCheck: boolean;
+
   // UI panels
   showOutline: boolean;
 
@@ -36,6 +39,7 @@ interface SettingsState {
   setPreviewFontSize: (size: number) => void;
   setAutoSave: (enabled: boolean) => void;
   setAutoSaveDelay: (delay: number) => void;
+  setSpellCheck: (enabled: boolean) => void;
   setShowOutline: (show: boolean) => void;
   toggleOutline: () => void;
   setAll: (settings: Partial<SettingsState>) => void;
@@ -54,6 +58,7 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
   previewFontSize: 16,
   autoSave: false,
   autoSaveDelay: 5000,
+  spellCheck: true,
   showOutline: false,
 
   setEditorFontSize: (size) => {
@@ -111,6 +116,11 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
     get().save();
   },
 
+  setSpellCheck: (enabled) => {
+    set({ spellCheck: enabled });
+    get().save();
+  },
+
   setShowOutline: (show) => {
     set({ showOutline: show });
     get().save();
@@ -141,6 +151,7 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
           previewFontSize: state.previewFontSize,
           autoSave: state.autoSave,
           autoSaveDelay: state.autoSaveDelay,
+          spellCheck: state.spellCheck,
           showOutline: state.showOutline,
         },
       });

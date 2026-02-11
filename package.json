@@ -14,6 +14,7 @@
     "format": "prettier --write ."
   },
   "dependencies": {
+    "@microsoft/signalr": "^10.0.0",
     "@monaco-editor/react": "^4.6.0",
     "@radix-ui/react-dialog": "^1.0.5",
     "@radix-ui/react-dropdown-menu": "^2.0.6",
@@ -32,9 +33,11 @@
     "@tauri-apps/plugin-fs": "^2.0.0",
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.1.0",
+    "dictionary-en": "^4.0.0",
     "katex": "^0.16.9",
     "lucide-react": "^0.312.0",
     "monaco-editor": "^0.45.0",
+    "nspell": "^2.1.5",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-resizable-panels": "^2.0.0",

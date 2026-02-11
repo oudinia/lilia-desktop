@@ -1,4 +1,5 @@
 use crate::AppState;
+use crate::formulas::{Formula, FormulaUpdate};
 use serde::{Deserialize, Serialize};
 use std::fs;
 use std::path::PathBuf;
@@ -150,6 +151,42 @@ pub fn export_to_format(options: ExportOptions) -> Result<String, String> {
 }
 
 // ============================================================================
+// Image Operations
+// ============================================================================
+
+#[tauri::command]
+pub fn save_image(source: String, destination: String) -> Result<String, String> {
+    let dest_path = PathBuf::from(&destination);
+
+    // Ensure parent directory exists
+    if let Some(parent) = dest_path.parent() {
+        fs::create_dir_all(parent)
+            .map_err(|e| format!("Failed to create assets directory: {}", e))?;
+    }
+
+    fs::copy(&source, &destination)
+        .map_err(|e| format!("Failed to copy image: {}", e))?;
+
+    Ok(destination)
+}
+
+#[tauri::command]
+pub fn save_image_bytes(bytes: Vec<u8>, destination: String) -> Result<String, String> {
+    let dest_path = PathBuf::from(&destination);
+
+    // Ensure parent directory exists
+    if let Some(parent) = dest_path.parent() {
+        fs::create_dir_all(parent)
+            .map_err(|e| format!("Failed to create assets directory: {}", e))?;
+    }
+
+    fs::write(&destination, bytes)
+        .map_err(|e| format!("Failed to save image: {}", e))?;
+
+    Ok(destination)
+}
+
+// ============================================================================
 // Window State
 // ============================================================================
 
@@ -166,4 +203,58 @@ pub fn save_window_state(window_state: WindowState, state: State<AppState>) -> R
     settings.window_state = Some(window_state);
     manager.update_settings(settings);
     manager.save().map_err(|e| e.to_string())
+}
+
+// ============================================================================
+// Formula Library
+// ============================================================================
+
+#[tauri::command]
+pub fn get_formulas(state: State<AppState>) -> Vec<Formula> {
+    let manager = state.formulas.lock().unwrap();
+    manager.get_all()
+}
+
+#[tauri::command]
+pub fn create_formula(formula: Formula, state: State<AppState>) -> Result<Formula, String> {
+    let mut manager = state.formulas.lock().unwrap();
+    let result = manager.add(formula);
+    manager.save().map_err(|e| e.to_string())?;
+    Ok(result)
+}
+
+#[tauri::command]
+pub fn update_formula(
+    id: String,
+    updates: FormulaUpdate,
+    state: State<AppState>,
+) -> Result<Option<Formula>, String> {
+    let mut manager = state.formulas.lock().unwrap();
+    let result = manager.update(&id, updates);
+    manager.save().map_err(|e| e.to_string())?;
+    Ok(result)
+}
+
+#[tauri::command]
+pub fn delete_formula(id: String, state: State<AppState>) -> Result<bool, String> {
+    let mut manager = state.formulas.lock().unwrap();
+    let result = manager.remove(&id);
+    manager.save().map_err(|e| e.to_string())?;
+    Ok(result)
+}
+
+#[tauri::command]
+pub fn toggle_formula_favorite(id: String, state: State<AppState>) -> Result<Option<Formula>, String> {
+    let mut manager = state.formulas.lock().unwrap();
+    let result = manager.toggle_favorite(&id);
+    manager.save().map_err(|e| e.to_string())?;
+    Ok(result)
+}
+
+#[tauri::command]
+pub fn increment_formula_usage(id: String, state: State<AppState>) -> Result<Option<Formula>, String> {
+    let mut manager = state.formulas.lock().unwrap();
+    let result = manager.increment_usage(&id);
+    manager.save().map_err(|e| e.to_string())?;
+    Ok(result)
 }

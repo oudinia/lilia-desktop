@@ -1,6 +1,118 @@
 // Export utilities for converting LML to various formats
 
 /**
+ * Export rendered HTML as PDF via the browser print dialog.
+ * Opens a hidden iframe with print-ready styles and triggers window.print().
+ */
+export function exportToPdf(lmlContent: string, renderedHtml: string) {
+  const titleMatch = lmlContent.match(/title:\s*(.+)/);
+  const title = titleMatch?.[1] || "Untitled Document";
+
+  const printHtml = `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>${escapeHtml(title)}</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+  <style>
+    @media print {
+      @page { margin: 2cm; }
+    }
+    body {
+      font-family: Georgia, 'Times New Roman', serif;
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 2rem;
+      line-height: 1.6;
+      color: #000;
+    }
+    h1, h2, h3, h4 { margin-top: 1.5rem; page-break-after: avoid; }
+    pre {
+      background: #f5f5f5;
+      padding: 1rem;
+      border-radius: 4px;
+      overflow-x: auto;
+      page-break-inside: avoid;
+    }
+    code {
+      font-family: 'SF Mono', Consolas, monospace;
+      font-size: 0.9em;
+    }
+    blockquote {
+      border-left: 4px solid #999;
+      margin: 1rem 0;
+      padding-left: 1rem;
+      color: #444;
+    }
+    table {
+      border-collapse: collapse;
+      width: 100%;
+      margin: 1rem 0;
+      page-break-inside: avoid;
+    }
+    th, td {
+      border: 1px solid #999;
+      padding: 0.5rem;
+      text-align: left;
+    }
+    th { background: #eee; }
+    .theorem-box {
+      background: #f8f9fa;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      padding: 1rem;
+      margin: 1rem 0;
+      page-break-inside: avoid;
+    }
+    .theorem-box h4 { margin-top: 0; }
+    .equation {
+      text-align: center;
+      margin: 1.5rem 0;
+    }
+    .abstract {
+      background: #f8f9fa;
+      padding: 1rem;
+      border-radius: 4px;
+      margin: 1rem 0;
+    }
+    img { max-width: 100%; page-break-inside: avoid; }
+  </style>
+</head>
+<body>
+${renderedHtml}
+</body>
+</html>`;
+
+  // Use a hidden iframe to trigger print
+  const iframe = document.createElement("iframe");
+  iframe.style.position = "fixed";
+  iframe.style.right = "0";
+  iframe.style.bottom = "0";
+  iframe.style.width = "0";
+  iframe.style.height = "0";
+  iframe.style.border = "none";
+  document.body.appendChild(iframe);
+
+  const iframeDoc = iframe.contentDocument || iframe.contentWindow?.document;
+  if (!iframeDoc) return;
+
+  iframeDoc.open();
+  iframeDoc.write(printHtml);
+  iframeDoc.close();
+
+  // Wait for styles/KaTeX to load before printing
+  iframe.onload = () => {
+    setTimeout(() => {
+      iframe.contentWindow?.print();
+      // Clean up after print dialog closes
+      setTimeout(() => {
+        document.body.removeChild(iframe);
+      }, 1000);
+    }, 500);
+  };
+}
+
+/**
  * Convert LML content to LaTeX
  */
 export function exportToLatex(lmlContent: string): string {

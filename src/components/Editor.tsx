@@ -5,6 +5,7 @@ import { useAppStore } from "@/store/app-store";
 import { useSettingsStore } from "@/store/settings-store";
 import { registerLmlLanguage } from "@/lib/lml-language";
 import { validateLml } from "@/lib/lml-validator";
+import { checkDocument, suggest, addWord, isReady as spellReady } from "@/lib/spell-checker";
 
 // Global editor reference for external access (symbol insertion, etc.)
 let globalEditorRef: editor.IStandaloneCodeEditor | null = null;
@@ -123,7 +124,7 @@ export function replaceAllMatches(
 
 export function Editor() {
   const editorRef = useRef<editor.IStandaloneCodeEditor | null>(null);
-  const { document, setContent, setCursorPosition, setScrollPercent } = useAppStore();
+  const { document, setContent, setCursorPosition, setTopVisibleLine } = useAppStore();
   const {
     editorFontSize,
     editorFontFamily,
@@ -132,6 +133,7 @@ export function Editor() {
     lineNumbers,
     minimap,
     theme,
+    spellCheck,
   } = useSettingsStore();
 
   // Register LML language before editor mounts
@@ -163,6 +165,27 @@ export function Editor() {
     monaco.editor.setModelMarkers(model, "lml-validator", markers);
   }, []);
 
+  // Run spell checking on content
+  const runSpellCheck = useCallback((content: string, monaco: typeof import("monaco-editor"), model: editor.ITextModel) => {
+    if (!spellReady()) return;
+
+    const errors = checkDocument(content);
+    const markers = errors.map((err) => ({
+      severity: monaco.MarkerSeverity.Hint,
+      startLineNumber: err.line,
+      startColumn: err.startColumn,
+      endLineNumber: err.line,
+      endColumn: err.endColumn,
+      message: err.suggestions.length > 0
+        ? `"${err.word}" — Did you mean: ${err.suggestions.join(", ")}?`
+        : `"${err.word}" may be misspelled`,
+      source: "spell-checker",
+      tags: [monaco.MarkerTag.Unnecessary], // Shows as faded underline
+    }));
+
+    monaco.editor.setModelMarkers(model, "spell-checker", markers);
+  }, []);
+
   // Setup editor after mount
   const handleMount: OnMount = (editor, monaco) => {
     editorRef.current = editor;
@@ -174,30 +197,98 @@ export function Editor() {
       setCursorPosition(e.position.lineNumber, e.position.column);
     });
 
-    // Track scroll position for sync
-    editor.onDidScrollChange((e) => {
-      const scrollTop = e.scrollTop;
-      const scrollHeight = e.scrollHeight - editor.getLayoutInfo().height;
-      if (scrollHeight > 0) {
-        const percent = scrollTop / scrollHeight;
-        setScrollPercent(percent);
+    // Track top visible line for preview scroll sync
+    editor.onDidScrollChange(() => {
+      const visibleRanges = editor.getVisibleRanges();
+      if (visibleRanges.length > 0) {
+        setTopVisibleLine(visibleRanges[0].startLineNumber);
       }
     });
 
-    // Run initial validation
+    // Run initial validation and spell check
     const model = editor.getModel();
     if (model) {
       runValidation(model.getValue(), monaco, model);
+      if (spellCheck) runSpellCheck(model.getValue(), monaco, model);
 
-      // Validate on content change (debounced)
+      // Validate + spell check on content change (debounced)
       let validationTimeout: ReturnType<typeof setTimeout>;
+      let spellTimeout: ReturnType<typeof setTimeout>;
       model.onDidChangeContent(() => {
         clearTimeout(validationTimeout);
         validationTimeout = setTimeout(() => {
           runValidation(model.getValue(), monaco, model);
         }, 500);
+
+        clearTimeout(spellTimeout);
+        spellTimeout = setTimeout(() => {
+          if (useSettingsStore.getState().spellCheck) {
+            runSpellCheck(model.getValue(), monaco, model);
+          } else {
+            monaco.editor.setModelMarkers(model, "spell-checker", []);
+          }
+        }, 1000); // Longer debounce for spell check (heavier)
       });
     }
+
+    // Register code action provider for spell suggestions
+    monaco.languages.registerCodeActionProvider("lml", {
+      provideCodeActions: (_model, _range, context) => {
+        const spellMarkers = context.markers.filter(m => m.source === "spell-checker");
+        if (spellMarkers.length === 0) return { actions: [], dispose: () => {} };
+
+        const actions: import("monaco-editor").languages.CodeAction[] = [];
+
+        for (const marker of spellMarkers) {
+          // Extract the misspelled word from the marker range
+          const wordRange = {
+            startLineNumber: marker.startLineNumber,
+            startColumn: marker.startColumn,
+            endLineNumber: marker.endLineNumber,
+            endColumn: marker.endColumn,
+          };
+          const word = _model.getValueInRange(wordRange);
+
+          // Add suggestion actions
+          const suggestions = suggest(word);
+          for (const suggestion of suggestions) {
+            actions.push({
+              title: `Change to "${suggestion}"`,
+              kind: "quickfix",
+              edit: {
+                edits: [{
+                  resource: _model.uri,
+                  textEdit: { range: wordRange, text: suggestion },
+                  versionId: _model.getVersionId(),
+                }],
+              },
+            });
+          }
+
+          // Add "Add to dictionary" action
+          actions.push({
+            title: `Add "${word}" to dictionary`,
+            kind: "quickfix",
+            command: {
+              id: "spell.addWord",
+              title: "Add to dictionary",
+              arguments: [word],
+            },
+          });
+        }
+
+        return { actions, dispose: () => {} };
+      },
+    });
+
+    // Register the addWord command
+    editor.addCommand(0, () => {}, "spell.addWord");
+    monaco.editor.registerCommand("spell.addWord", (_accessor, word: string) => {
+      addWord(word);
+      // Re-run spell check to clear the marker
+      const m = editor.getModel();
+      if (m) runSpellCheck(m.getValue(), monaco, m);
+    });
 
     // Focus editor
     editor.focus();

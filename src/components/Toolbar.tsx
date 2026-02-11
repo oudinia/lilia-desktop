@@ -15,6 +15,7 @@ import {
   Highlighter,
   Link,
   MoreHorizontal,
+  Library,
 } from "lucide-react";
 import { Button } from "./ui/Button";
 import {
@@ -24,8 +25,11 @@ import {
 } from "./ui/Popover";
 import { Separator } from "./ui/Separator";
 import { insertTextAtCursor } from "./Editor";
+import { useAppStore } from "@/store/app-store";
 
 export function Toolbar() {
+  const { setFormulaLibraryOpen } = useAppStore();
+
   return (
     <div className="flex items-center gap-1 px-2 py-1 border-b bg-background">
       {/* Text Formatting */}
@@ -106,6 +110,13 @@ export function Toolbar() {
         icon={<AlertCircle className="h-4 w-4" />}
         tooltip="Alert Box"
         onClick={() => insertTextAtCursor("\n@alert(info)\nYour alert message here.\n")}
+      />
+
+      {/* Formula Library */}
+      <ToolbarButton
+        icon={<Library className="h-4 w-4" />}
+        tooltip="Formula Library (Ctrl+Shift+E)"
+        onClick={() => setFormulaLibraryOpen(true)}
       />
 
       {/* More Directives */}

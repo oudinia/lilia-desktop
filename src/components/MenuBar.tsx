@@ -14,7 +14,7 @@ import {
 } from "./ui/Menubar";
 import { useAppStore } from "@/store/app-store";
 import { useSettingsStore } from "@/store/settings-store";
-import { exportToLatex, exportToHtml, exportToMarkdown } from "@/lib/exports";
+import { exportToLatex, exportToHtml, exportToMarkdown, exportToPdf } from "@/lib/exports";
 import { parseLmlToHtml } from "@/lib/lml-renderer";
 import { insertTextAtCursor } from "./Editor";
 
@@ -30,6 +30,9 @@ export function MenuBar() {
     setFindReplaceOpen,
     setAboutOpen,
     setKeyboardShortcutsOpen,
+    setTemplateGalleryOpen,
+    setShareDialogOpen,
+    setFormulaLibraryOpen,
     showToast,
     ui,
   } = useAppStore();
@@ -105,6 +108,9 @@ export function MenuBar() {
             New Document
             <MenubarShortcut>Ctrl+N</MenubarShortcut>
           </MenubarItem>
+          <MenubarItem onClick={() => setTemplateGalleryOpen(true)}>
+            New from Template...
+          </MenubarItem>
           <MenubarItem onClick={openDocument}>
             Open...
             <MenubarShortcut>Ctrl+O</MenubarShortcut>
@@ -141,9 +147,20 @@ export function MenuBar() {
             <MenubarShortcut>Ctrl+Shift+S</MenubarShortcut>
           </MenubarItem>
           <MenubarSeparator />
+          <MenubarItem onClick={() => setShareDialogOpen(true)}>
+            Share...
+          </MenubarItem>
+          <MenubarSeparator />
           <MenubarSub>
             <MenubarSubTrigger>Export</MenubarSubTrigger>
             <MenubarSubContent>
+              <MenubarItem onClick={() => {
+                const renderedHtml = parseLmlToHtml(document.content);
+                exportToPdf(document.content, renderedHtml);
+              }}>
+                PDF (Print)
+              </MenubarItem>
+              <MenubarSeparator />
               <MenubarItem onClick={() => handleExport("latex")}>
                 LaTeX (.tex)
               </MenubarItem>
@@ -224,6 +241,11 @@ export function MenuBar() {
       <MenubarMenu>
         <MenubarTrigger className="font-medium">Insert</MenubarTrigger>
         <MenubarContent>
+          <MenubarItem onClick={() => setFormulaLibraryOpen(true)}>
+            Formula Library...
+            <MenubarShortcut>Ctrl+Shift+E</MenubarShortcut>
+          </MenubarItem>
+          <MenubarSeparator />
           <MenubarItem onClick={() => insertTextAtCursor("\n# Heading\n")}>
             Heading
           </MenubarItem>

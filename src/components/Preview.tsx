@@ -1,4 +1,4 @@
-import { useMemo, useRef, useEffect } from "react";
+import { useMemo, useRef, useEffect, useCallback } from "react";
 import { useAppStore } from "@/store/app-store";
 import { useSettingsStore } from "@/store/settings-store";
 import { parseLmlToHtml } from "@/lib/lml-renderer";
@@ -7,7 +7,7 @@ export function Preview() {
   const { document, editor } = useAppStore();
   const { previewFontSize, livePreview } = useSettingsStore();
   const containerRef = useRef<HTMLDivElement>(null);
-  const isScrollingSelf = useRef(false);
+  const syncTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Parse and render LML content
   const htmlContent = useMemo(() => {
@@ -21,16 +21,48 @@ export function Preview() {
     }
   }, [document.content, livePreview]);
 
-  // Sync scroll position from editor
-  useEffect(() => {
+  // Line-based scroll sync from editor
+  const syncScroll = useCallback((topLine: number) => {
     const container = containerRef.current;
-    if (!container || isScrollingSelf.current) return;
+    if (!container) return;
 
-    const scrollHeight = container.scrollHeight - container.clientHeight;
-    if (scrollHeight > 0) {
-      container.scrollTop = editor.scrollPercent * scrollHeight;
+    const elements = container.querySelectorAll<HTMLElement>("[data-source-line]");
+    if (elements.length === 0) return;
+
+    // Find the closest element at or before the top visible line
+    let target: HTMLElement | null = null;
+    for (const el of elements) {
+      const line = parseInt(el.dataset.sourceLine || "0", 10);
+      if (line <= topLine) {
+        target = el;
+      } else {
+        break;
+      }
     }
-  }, [editor.scrollPercent]);
+
+    if (target) {
+      const containerRect = container.getBoundingClientRect();
+      const targetRect = target.getBoundingClientRect();
+      const offset = targetRect.top - containerRect.top + container.scrollTop;
+      container.scrollTo({ top: offset, behavior: "smooth" });
+    }
+  }, []);
+
+  // Debounced sync on editor scroll
+  useEffect(() => {
+    if (syncTimeoutRef.current) {
+      clearTimeout(syncTimeoutRef.current);
+    }
+    syncTimeoutRef.current = setTimeout(() => {
+      syncScroll(editor.topVisibleLine);
+    }, 50);
+
+    return () => {
+      if (syncTimeoutRef.current) {
+        clearTimeout(syncTimeoutRef.current);
+      }
+    };
+  }, [editor.topVisibleLine, syncScroll]);
 
   return (
     <div

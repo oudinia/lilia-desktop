@@ -11,10 +11,17 @@ import { SettingsDialog } from "./components/SettingsDialog";
 import { FindReplaceDialog } from "./components/FindReplaceDialog";
 import { AboutDialog } from "./components/AboutDialog";
 import { KeyboardShortcutsDialog } from "./components/KeyboardShortcutsDialog";
+import { TemplateGallery } from "./components/TemplateGallery";
+import { ShareDialog } from "./components/ShareDialog";
+import { FormulaLibrary } from "./components/FormulaLibrary";
+import { PresenceBar } from "./components/PresenceBar";
 import { useAppStore } from "./store/app-store";
 import { useSettingsStore } from "./store/settings-store";
 import { useKeyboardShortcuts } from "./hooks/useKeyboardShortcuts";
 import { useFileDrop } from "./hooks/useFileDrop";
+import { useAutoSave } from "./hooks/useAutoSave";
+import { useImageDrop } from "./hooks/useImageDrop";
+import { initSpellChecker } from "./lib/spell-checker";
 
 function App() {
   const { theme, showOutline } = useSettingsStore();
@@ -26,9 +33,16 @@ function App() {
   // Initialize file drop handling
   useFileDrop();
 
+  // Auto-save when enabled
+  useAutoSave();
+
+  // Image drag-and-drop + paste
+  const { isDragging } = useImageDrop();
+
   // Load settings on mount
   useEffect(() => {
     loadSettings();
+    initSpellChecker();
   }, [loadSettings]);
 
   // Apply theme
@@ -38,8 +52,11 @@ function App() {
 
   return (
     <div className="h-screen flex flex-col bg-background text-foreground overflow-hidden">
-      {/* Menu Bar */}
-      <MenuBar />
+      {/* Menu Bar + Presence */}
+      <div className="flex items-center justify-between">
+        <MenuBar />
+        <PresenceBar />
+      </div>
 
       {/* Toolbar */}
       <Toolbar />
@@ -82,9 +99,22 @@ function App() {
       <FindReplaceDialog />
       <AboutDialog />
       <KeyboardShortcutsDialog />
+      <TemplateGallery />
+      <ShareDialog />
+      <FormulaLibrary />
 
       {/* Toast notifications */}
       <Toaster />
+
+      {/* Image drop overlay */}
+      {isDragging && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm pointer-events-none">
+          <div className="border-2 border-dashed border-primary rounded-xl p-12 text-center">
+            <p className="text-2xl font-semibold text-primary">Drop image here</p>
+            <p className="text-sm text-muted-foreground mt-2">Image will be saved to the assets folder</p>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

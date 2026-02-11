@@ -11,6 +11,7 @@ export function useKeyboardShortcuts() {
     setSettingsOpen,
     setFindReplaceOpen,
     setKeyboardShortcutsOpen,
+    setFormulaLibraryOpen,
   } = useAppStore();
   const { theme, setTheme, toggleOutline } = useSettingsStore();
 
@@ -53,6 +54,12 @@ export function useKeyboardShortcuts() {
         toggleOutline();
       }
 
+      // Formula Library
+      if (isMod && isShift && e.key === "E") {
+        e.preventDefault();
+        setFormulaLibraryOpen(true);
+      }
+
       // Settings
       if (isMod && e.key === ",") {
         e.preventDefault();
@@ -70,6 +77,7 @@ export function useKeyboardShortcuts() {
         setSettingsOpen(false);
         setFindReplaceOpen(false);
         setKeyboardShortcutsOpen(false);
+        setFormulaLibraryOpen(false);
       }
     };
 
@@ -83,6 +91,7 @@ export function useKeyboardShortcuts() {
     setSettingsOpen,
     setFindReplaceOpen,
     setKeyboardShortcutsOpen,
+    setFormulaLibraryOpen,
     theme,
     setTheme,
     toggleOutline,

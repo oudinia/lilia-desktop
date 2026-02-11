@@ -9,13 +9,14 @@ interface DocumentState {
   fileName: string;
   isDirty: boolean;
   lastSaved: Date | null;
+  saveStatus: "saved" | "saving" | "unsaved";
 }
 
 interface EditorState {
   cursorLine: number;
   cursorColumn: number;
   selection: string | null;
-  scrollPercent: number;
+  topVisibleLine: number;
 }
 
 interface UIState {
@@ -23,6 +24,9 @@ interface UIState {
   findReplaceOpen: boolean;
   aboutOpen: boolean;
   keyboardShortcutsOpen: boolean;
+  templateGalleryOpen: boolean;
+  shareDialogOpen: boolean;
+  formulaLibraryOpen: boolean;
   recentFiles: string[];
 }
 
@@ -43,13 +47,16 @@ interface AppState {
   // Editor actions
   setCursorPosition: (line: number, column: number) => void;
   setSelection: (selection: string | null) => void;
-  setScrollPercent: (percent: number) => void;
+  setTopVisibleLine: (line: number) => void;
 
   // UI actions
   setSettingsOpen: (open: boolean) => void;
   setFindReplaceOpen: (open: boolean) => void;
   setAboutOpen: (open: boolean) => void;
   setKeyboardShortcutsOpen: (open: boolean) => void;
+  setTemplateGalleryOpen: (open: boolean) => void;
+  setShareDialogOpen: (open: boolean) => void;
+  setFormulaLibraryOpen: (open: boolean) => void;
   loadRecentFiles: () => Promise<void>;
   loadSettings: () => Promise<void>;
 
@@ -112,18 +119,22 @@ export const useAppStore = create<AppState>((set, get) => ({
     fileName: "Untitled.lml",
     isDirty: false,
     lastSaved: null,
+    saveStatus: "saved",
   },
   editor: {
     cursorLine: 1,
     cursorColumn: 1,
     selection: null,
-    scrollPercent: 0,
+    topVisibleLine: 1,
   },
   ui: {
     settingsOpen: false,
     findReplaceOpen: false,
     aboutOpen: false,
     keyboardShortcutsOpen: false,
+    templateGalleryOpen: false,
+    shareDialogOpen: false,
+    formulaLibraryOpen: false,
     recentFiles: [],
   },
   toasts: [],
@@ -134,6 +145,7 @@ export const useAppStore = create<AppState>((set, get) => ({
         ...state.document,
         content,
         isDirty: true,
+        saveStatus: "unsaved",
       },
     }));
   },
@@ -150,6 +162,7 @@ export const useAppStore = create<AppState>((set, get) => ({
         fileName: "Untitled.lml",
         isDirty: false,
         lastSaved: null,
+        saveStatus: "saved",
       },
     });
   },
@@ -184,6 +197,7 @@ export const useAppStore = create<AppState>((set, get) => ({
           fileName,
           isDirty: false,
           lastSaved: new Date(),
+          saveStatus: "saved",
         },
       });
 
@@ -205,21 +219,27 @@ export const useAppStore = create<AppState>((set, get) => ({
     }
 
     try {
+      set((s) => ({
+        document: { ...s.document, saveStatus: "saving" },
+      }));
+
       await invoke("write_file", {
         path: state.document.filePath,
         content: state.document.content,
       });
 
-      set((state) => ({
+      set((s) => ({
         document: {
-          ...state.document,
+          ...s.document,
           isDirty: false,
           lastSaved: new Date(),
+          saveStatus: "saved",
         },
       }));
-
-      get().showToast("Document saved", "success");
     } catch (error) {
+      set((s) => ({
+        document: { ...s.document, saveStatus: "unsaved" },
+      }));
       get().showToast(`Failed to save: ${error}`, "error");
     }
   },
@@ -236,6 +256,10 @@ export const useAppStore = create<AppState>((set, get) => ({
       });
 
       if (filePath) {
+        set((s) => ({
+          document: { ...s.document, saveStatus: "saving" },
+        }));
+
         await invoke("write_file", {
           path: filePath,
           content: state.document.content,
@@ -243,13 +267,14 @@ export const useAppStore = create<AppState>((set, get) => ({
 
         const fileName = filePath.split(/[/\\]/).pop() || "Untitled.lml";
 
-        set((state) => ({
+        set((s) => ({
           document: {
-            ...state.document,
+            ...s.document,
             filePath,
             fileName,
             isDirty: false,
             lastSaved: new Date(),
+            saveStatus: "saved",
           },
         }));
 
@@ -307,9 +332,27 @@ export const useAppStore = create<AppState>((set, get) => ({
     }));
   },
 
-  setScrollPercent: (percent) => {
+  setTemplateGalleryOpen: (open) => {
     set((state) => ({
-      editor: { ...state.editor, scrollPercent: percent },
+      ui: { ...state.ui, templateGalleryOpen: open },
+    }));
+  },
+
+  setShareDialogOpen: (open) => {
+    set((state) => ({
+      ui: { ...state.ui, shareDialogOpen: open },
+    }));
+  },
+
+  setFormulaLibraryOpen: (open) => {
+    set((state) => ({
+      ui: { ...state.ui, formulaLibraryOpen: open },
+    }));
+  },
+
+  setTopVisibleLine: (line) => {
+    set((state) => ({
+      editor: { ...state.editor, topVisibleLine: line },
     }));
   },
 

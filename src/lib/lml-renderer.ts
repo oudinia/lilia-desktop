@@ -1,17 +1,72 @@
 import katex from "katex";
 
+// Collected data during rendering (module-level for access by render functions)
+let collectedHeadings: Array<{ level: number; text: string; id: string }> = [];
+let collectedFootnotes: Map<string, string> = new Map();
+// Reserved for future use when @cite references are connected to bibliography entries
+// let collectedCitations: Set<string> = new Set();
+
 /**
- * Parse LML text and convert to HTML for preview
+ * Parse LML text and convert to HTML for preview.
+ * Adds data-source-line attributes for scroll sync.
+ * Collects footnotes, headings, and citations for @toc, @footnote, and @bibliography.
  */
 export function parseLmlToHtml(content: string): string {
   const lines = content.split("\n");
   const htmlParts: string[] = [];
   let currentBlock: string[] = [];
   let currentBlockType: string | null = null;
+  let currentBlockStartLine = 0;
   let inDocumentHeader = false;
-
   let inLatexBlock = false;
 
+  // Reset collected data
+  collectedHeadings = [];
+  collectedFootnotes = new Map();
+  // collectedCitations = new Set();
+
+  // First pass: collect all headings (needed for @toc which may appear early)
+  for (let i = 0; i < lines.length; i++) {
+    const match = lines[i].trim().match(/^(#{1,6})\s+(.+)$/);
+    if (match) {
+      const level = match[1].length;
+      const text = match[2];
+      const id = "heading-" + text.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
+      collectedHeadings.push({ level, text, id });
+    }
+  }
+
+  // Also pre-collect footnote definitions
+  let inFootnote = false;
+  let footnoteId = "";
+  let footnoteLines: string[] = [];
+  for (let i = 0; i < lines.length; i++) {
+    const trimmed = lines[i].trim();
+    if (trimmed.startsWith("@footnote")) {
+      if (inFootnote && footnoteId) {
+        collectedFootnotes.set(footnoteId, footnoteLines.join(" ").trim());
+      }
+      footnoteId = trimmed.match(/\(([^)]+)\)/)?.[1] || "";
+      footnoteLines = [];
+      inFootnote = true;
+      continue;
+    }
+    if (inFootnote) {
+      if (trimmed === "" || trimmed.startsWith("@") || trimmed.startsWith("#")) {
+        collectedFootnotes.set(footnoteId, footnoteLines.join(" ").trim());
+        inFootnote = false;
+        footnoteId = "";
+        footnoteLines = [];
+      } else {
+        footnoteLines.push(trimmed);
+      }
+    }
+  }
+  if (inFootnote && footnoteId) {
+    collectedFootnotes.set(footnoteId, footnoteLines.join(" ").trim());
+  }
+
+  // Main rendering pass
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i];
     const trimmed = line.trim();
@@ -19,7 +74,7 @@ export function parseLmlToHtml(content: string): string {
     // Handle @latex block specially - collect until @endlatex
     if (inLatexBlock) {
       if (trimmed === "@endlatex") {
-        htmlParts.push(renderBlock("latex", currentBlock));
+        htmlParts.push(addSourceLine(renderBlock("latex", currentBlock), currentBlockStartLine));
         currentBlockType = null;
         currentBlock = [];
         inLatexBlock = false;
@@ -42,20 +97,16 @@ export function parseLmlToHtml(content: string): string {
       }
     }
 
-    // Skip bibliography section for now
-    if (trimmed === "@bibliography") {
-      break;
-    }
-
     // Detect block starts
     const blockStart = detectBlockStart(trimmed);
     if (blockStart) {
       // Flush previous block
       if (currentBlock.length > 0) {
-        htmlParts.push(renderBlock(currentBlockType, currentBlock));
+        htmlParts.push(addSourceLine(renderBlock(currentBlockType, currentBlock), currentBlockStartLine));
       }
 
       currentBlockType = blockStart.type;
+      currentBlockStartLine = i + 1; // 1-indexed line number
       currentBlock = blockStart.params ? [blockStart.params] : [];
 
       // Handle @latex block start
@@ -66,7 +117,7 @@ export function parseLmlToHtml(content: string): string {
 
       // Single-line blocks
       if (blockStart.type === "heading" || blockStart.type === "hr") {
-        htmlParts.push(renderBlock(blockStart.type, [trimmed]));
+        htmlParts.push(addSourceLine(renderBlock(blockStart.type, [trimmed]), i + 1));
         currentBlockType = null;
         currentBlock = [];
       }
@@ -76,7 +127,7 @@ export function parseLmlToHtml(content: string): string {
     // Empty line ends certain blocks
     if (trimmed === "") {
       if (currentBlock.length > 0 && shouldEndBlock(currentBlockType)) {
-        htmlParts.push(renderBlock(currentBlockType, currentBlock));
+        htmlParts.push(addSourceLine(renderBlock(currentBlockType, currentBlock), currentBlockStartLine));
         currentBlockType = null;
         currentBlock = [];
       }
@@ -86,16 +137,36 @@ export function parseLmlToHtml(content: string): string {
     // Continue current block or start paragraph
     if (currentBlockType === null) {
       currentBlockType = "paragraph";
+      currentBlockStartLine = i + 1;
     }
     currentBlock.push(line);
   }
 
   // Flush final block
   if (currentBlock.length > 0) {
-    htmlParts.push(renderBlock(currentBlockType, currentBlock));
+    htmlParts.push(addSourceLine(renderBlock(currentBlockType, currentBlock), currentBlockStartLine));
+  }
+
+  // Append footnotes section if any were collected
+  if (collectedFootnotes.size > 0) {
+    let fnHtml = '<section class="footnotes-section"><hr /><h4>Footnotes</h4><ol class="footnotes-list">';
+    for (const [id, text] of collectedFootnotes) {
+      fnHtml += `<li id="fn-${escapeHtml(id)}" class="footnote-item"><span class="footnote-back"><a href="#fnref-${escapeHtml(id)}">↩</a></span> ${formatInline(text)}</li>`;
+    }
+    fnHtml += "</ol></section>";
+    htmlParts.push(fnHtml);
   }
 
   return htmlParts.join("\n");
+}
+
+/**
+ * Add data-source-line attribute to the first HTML tag for scroll sync.
+ */
+function addSourceLine(html: string, lineNumber: number): string {
+  if (!html) return html;
+  // Add attribute to the first HTML opening tag
+  return html.replace(/^(\s*<\w+)/, `$1 data-source-line="${lineNumber}"`);
 }
 
 interface BlockStart {
@@ -162,6 +233,11 @@ function detectBlockStart(line: string): BlockStart | null {
   // Table of contents
   if (line === "@toc") {
     return { type: "toc" };
+  }
+
+  // Bibliography section
+  if (line === "@bibliography") {
+    return { type: "bibliography" };
   }
 
   // Footnote definition
@@ -248,6 +324,8 @@ function renderBlock(type: string | null, lines: string[]): string {
       return renderToc();
     case "footnote":
       return renderFootnote(lines);
+    case "bibliography":
+      return renderBibliography(lines);
     case "alert":
       return renderAlert(lines);
     case "center":
@@ -269,8 +347,10 @@ function renderHeading(line: string): string {
   const match = line.match(/^(#{1,6})\s+(.+)$/);
   if (!match) return "";
   const level = match[1].length;
-  const text = formatInline(match[2]);
-  return `<h${level}>${text}</h${level}>`;
+  const rawText = match[2];
+  const text = formatInline(rawText);
+  const id = "heading-" + rawText.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
+  return `<h${level} id="${id}">${text}</h${level}>`;
 }
 
 function renderParagraph(lines: string[]): string {
@@ -499,7 +579,7 @@ function formatInline(text: string): string {
   result = result.replace(/@raw\(([^)]+)\)/g, '<code class="raw-latex" title="Will render in final PDF: $1">⚡$1</code>');
 
   // Inline footnote reference: @fn(id)
-  result = result.replace(/@fn\(([^)]+)\)/g, '<sup class="footnote-ref"><a href="#fn-$1">[$1]</a></sup>');
+  result = result.replace(/@fn\(([^)]+)\)/g, '<sup class="footnote-ref" id="fnref-$1"><a href="#fn-$1">[$1]</a></sup>');
 
   // Inline highlight: @hl(text) or @highlight(text)
   result = result.replace(/@(?:hl|highlight)\(([^)]+)\)/g, '<mark class="highlight">$1</mark>');
@@ -562,25 +642,60 @@ function renderDate(lines: string[]): string {
 }
 
 /**
- * Render table of contents placeholder
+ * Render table of contents from collected headings
  */
 function renderToc(): string {
-  return `<div class="toc-placeholder">
-    <p><strong>Table of Contents</strong></p>
-    <p class="text-muted-foreground text-sm italic">(Auto-generated from headings on export)</p>
-  </div>`;
+  if (collectedHeadings.length === 0) {
+    return `<nav class="toc"><p><strong>Table of Contents</strong></p><p class="text-muted-foreground text-sm italic">No headings found.</p></nav>`;
+  }
+
+  let html = '<nav class="toc"><p class="toc-title"><strong>Table of Contents</strong></p><ul class="toc-list">';
+  const minLevel = Math.min(...collectedHeadings.map(h => h.level));
+
+  for (const heading of collectedHeadings) {
+    const indent = heading.level - minLevel;
+    const paddingLeft = indent * 1.2;
+    html += `<li class="toc-item toc-level-${heading.level}" style="padding-left: ${paddingLeft}rem"><a href="#${heading.id}">${escapeHtml(heading.text)}</a></li>`;
+  }
+
+  html += "</ul></nav>";
+  return html;
 }
 
 /**
- * Render footnote definition
+ * Render footnote definition — hidden inline since footnotes are
+ * collected and rendered as a section at the end of the document.
  */
-function renderFootnote(lines: string[]): string {
-  const id = lines[0] || "1";
-  const content = lines.slice(1).join(" ").trim();
-  return `<div class="footnote-def" id="fn-${id}">
-    <span class="footnote-number">[${id}]</span>
-    <span class="footnote-content">${formatInline(content)}</span>
-  </div>`;
+function renderFootnote(_lines: string[]): string {
+  // Footnotes are collected in the pre-pass and rendered at the end
+  return "";
+}
+
+/**
+ * Render bibliography/references section.
+ * Entries are lines following @bibliography in the format:
+ *   [key] Author. Title. Journal, Year.
+ * Or just freeform text lines.
+ */
+function renderBibliography(lines: string[]): string {
+  if (lines.length === 0) {
+    return `<section class="bibliography"><h3>References</h3><p class="text-muted-foreground text-sm italic">No entries.</p></section>`;
+  }
+
+  let html = '<section class="bibliography"><h3>References</h3><ol class="bib-list">';
+  for (const line of lines) {
+    const trimmed = line.trim();
+    if (!trimmed) continue;
+    // Support [key] prefix format
+    const keyMatch = trimmed.match(/^\[([^\]]+)\]\s*(.+)$/);
+    if (keyMatch) {
+      html += `<li id="bib-${escapeHtml(keyMatch[1])}" class="bib-entry"><span class="bib-key">[${escapeHtml(keyMatch[1])}]</span> ${formatInline(keyMatch[2])}</li>`;
+    } else {
+      html += `<li class="bib-entry">${formatInline(trimmed)}</li>`;
+    }
+  }
+  html += "</ol></section>";
+  return html;
 }
 
 /**
