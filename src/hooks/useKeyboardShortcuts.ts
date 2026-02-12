@@ -13,7 +13,7 @@ export function useKeyboardShortcuts() {
     setKeyboardShortcutsOpen,
     setFormulaLibraryOpen,
   } = useAppStore();
-  const { theme, setTheme, toggleOutline } = useSettingsStore();
+  const { theme, setTheme, activePanel, setActivePanel } = useSettingsStore();
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -51,7 +51,11 @@ export function useKeyboardShortcuts() {
       }
       if (isMod && isShift && e.key === "O") {
         e.preventDefault();
-        toggleOutline();
+        setActivePanel("outline");
+      }
+      if (isMod && isShift && e.key === "B") {
+        e.preventDefault();
+        setActivePanel("bibliography");
       }
 
       // Formula Library
@@ -94,6 +98,7 @@ export function useKeyboardShortcuts() {
     setFormulaLibraryOpen,
     theme,
     setTheme,
-    toggleOutline,
+    activePanel,
+    setActivePanel,
   ]);
 }

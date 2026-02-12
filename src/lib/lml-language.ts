@@ -536,6 +536,44 @@ export function registerLmlLanguage(monaco: Monaco) {
       return { suggestions };
     },
   });
+
+  // ============================================================================
+  // Slash Command Completion Provider - triggered by "/" at line start
+  // ============================================================================
+
+  monaco.languages.registerCompletionItemProvider("lml", {
+    triggerCharacters: ["/"],
+    provideCompletionItems: (model, position) => {
+      // Get text from the start of line to cursor
+      const lineContent = model.getLineContent(position.lineNumber);
+      const textBeforeCursor = lineContent.substring(0, position.column - 1);
+
+      // Only trigger when "/" is the only non-whitespace before cursor
+      if (!/^\s*\/$/.test(textBeforeCursor)) {
+        return { suggestions: [] };
+      }
+
+      // Replace from the beginning of the line (including leading whitespace and the "/")
+      const range = {
+        startLineNumber: position.lineNumber,
+        endLineNumber: position.lineNumber,
+        startColumn: 1,
+        endColumn: position.column,
+      };
+
+      const suggestions = slashCommands.map((cmd) => ({
+        label: `/${cmd.label}`,
+        kind: monaco.languages.CompletionItemKind.Snippet,
+        insertText: cmd.insertText,
+        insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
+        documentation: cmd.description,
+        sortText: cmd.sortOrder,
+        range,
+      }));
+
+      return { suggestions };
+    },
+  });
 }
 
 const greekLetters = [
@@ -571,4 +609,37 @@ const mathOperators = [
   { name: "exists", doc: "Exists" },
   { name: "in", doc: "Element of" },
   { name: "subset", doc: "Subset" },
+];
+
+// ============================================================================
+// Slash Commands - triggered by "/" at line start
+// ============================================================================
+
+const slashCommands = [
+  { label: "Heading 1", description: "Top-level heading", insertText: "# ${1:Heading}\n", sortOrder: "01" },
+  { label: "Heading 2", description: "Sub-heading", insertText: "## ${1:Heading}\n", sortOrder: "02" },
+  { label: "Heading 3", description: "Sub-sub-heading", insertText: "### ${1:Heading}\n", sortOrder: "03" },
+  { label: "Equation", description: "Math equation block", insertText: "@equation(label: ${1:eq:name}, mode: display)\n${2:E = mc^2}\n", sortOrder: "04" },
+  { label: "Code", description: "Code block with syntax highlighting", insertText: "@code(${1:python})\n${2:# Your code here}\n", sortOrder: "05" },
+  { label: "Table", description: "Table with headers", insertText: "@table\n| ${1:Header 1} | ${2:Header 2} |\n|------------|------------|\n| ${3:Cell 1}   | ${4:Cell 2}   |\n", sortOrder: "06" },
+  { label: "Figure", description: "Image with caption", insertText: "@figure(src: ${1:/path/to/image.png}, alt: ${2:Description})\n${3:Caption text}\n", sortOrder: "07" },
+  { label: "Unordered List", description: "Bullet list", insertText: "@list\n- ${1:First item}\n- ${2:Second item}\n- ${3:Third item}\n", sortOrder: "08" },
+  { label: "Ordered List", description: "Numbered list", insertText: "@list(ordered)\n1. ${1:First item}\n2. ${2:Second item}\n3. ${3:Third item}\n", sortOrder: "09" },
+  { label: "Quote", description: "Blockquote", insertText: "> ${1:Quote text}\n> -- ${2:Attribution}\n", sortOrder: "10" },
+  { label: "Abstract", description: "Abstract block", insertText: "@abstract\n${1:Abstract content here.}\n", sortOrder: "11" },
+  { label: "Theorem", description: "Theorem block", insertText: "@theorem(label: ${1:thm:name}, title: ${2:Theorem Title})\n${3:Theorem statement}\n", sortOrder: "12" },
+  { label: "Definition", description: "Definition block", insertText: "@definition(label: ${1:def:name}, title: ${2:Definition Title})\n${3:Definition text}\n", sortOrder: "13" },
+  { label: "Proof", description: "Proof block", insertText: "@proof\n${1:Proof content}$\\square$\n", sortOrder: "14" },
+  { label: "Alert", description: "Callout box", insertText: "@alert(${1|info,warning,danger,success,tip,note|})\n${2:Alert content here.}\n", sortOrder: "15" },
+  { label: "Center", description: "Centered text", insertText: "@center\n${1:Centered text here.}\n", sortOrder: "16" },
+  { label: "Epigraph", description: "Chapter opening quote", insertText: "@epigraph\n${1:A wise quote here.}\n-- ${2:Author Name}\n", sortOrder: "17" },
+  { label: "Divider", description: "Decorative section divider", insertText: "@divider(${1|stars,asterisk,dashes,dots,fleuron,line|})", sortOrder: "18" },
+  { label: "Table of Contents", description: "Auto-generated TOC", insertText: "@toc\n", sortOrder: "19" },
+  { label: "Bibliography", description: "Bibliography section", insertText: "@bibliography\n\n@bib(${1:article}, ${2:key2024})\nauthor: ${3:Author Name}\ntitle: ${4:Title}\nyear: ${5:2024}\n", sortOrder: "20" },
+  { label: "Page Break", description: "Force page break", insertText: "@pagebreak\n", sortOrder: "21" },
+  { label: "Lorem Ipsum", description: "Placeholder text", insertText: "@lorem(${1|paragraphs,sentences,words|}: ${2:3})", sortOrder: "22" },
+  { label: "Date", description: "Current date", insertText: "@date(${1|long,short,iso|})", sortOrder: "23" },
+  { label: "LaTeX Passthrough", description: "Raw LaTeX block", insertText: "@latex\n${1:% Raw LaTeX code here}\n@endlatex\n", sortOrder: "24" },
+  { label: "Drop Cap", description: "Large first letter paragraph", insertText: "@dropcap\n${1:Once upon a time...}\n", sortOrder: "25" },
+  { label: "Footnote", description: "Footnote definition", insertText: "@footnote(${1:1})\n${2:Footnote content here.}", sortOrder: "26" },
 ];

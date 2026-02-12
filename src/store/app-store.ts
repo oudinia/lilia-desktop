@@ -236,6 +236,18 @@ export const useAppStore = create<AppState>((set, get) => ({
           saveStatus: "saved",
         },
       }));
+
+      // Create version snapshot after successful save
+      const path = get().document.filePath;
+      if (path) {
+        import("@/store/version-store")
+          .then((m) => {
+            m.useVersionStore
+              .getState()
+              .createVersion(path, get().document.content, "Auto-save");
+          })
+          .catch(() => {});
+      }
     } catch (error) {
       set((s) => ({
         document: { ...s.document, saveStatus: "unsaved" },

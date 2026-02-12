@@ -1,6 +1,8 @@
 import { create } from "zustand";
 import { invoke } from "@tauri-apps/api/tauri";
 
+export type SidePanel = "outline" | "bibliography" | "history" | null;
+
 interface SettingsState {
   // Editor settings
   editorFontSize: number;
@@ -25,7 +27,7 @@ interface SettingsState {
   spellCheck: boolean;
 
   // UI panels
-  showOutline: boolean;
+  activePanel: SidePanel;
 
   // Actions
   setEditorFontSize: (size: number) => void;
@@ -40,8 +42,7 @@ interface SettingsState {
   setAutoSave: (enabled: boolean) => void;
   setAutoSaveDelay: (delay: number) => void;
   setSpellCheck: (enabled: boolean) => void;
-  setShowOutline: (show: boolean) => void;
-  toggleOutline: () => void;
+  setActivePanel: (panel: SidePanel) => void;
   setAll: (settings: Partial<SettingsState>) => void;
   save: () => Promise<void>;
 }
@@ -59,7 +60,7 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
   autoSave: false,
   autoSaveDelay: 5000,
   spellCheck: true,
-  showOutline: false,
+  activePanel: null,
 
   setEditorFontSize: (size) => {
     set({ editorFontSize: size });
@@ -121,18 +122,23 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
     get().save();
   },
 
-  setShowOutline: (show) => {
-    set({ showOutline: show });
-    get().save();
-  },
-
-  toggleOutline: () => {
-    set((state) => ({ showOutline: !state.showOutline }));
+  setActivePanel: (panel) => {
+    const current = get().activePanel;
+    // Toggle: if clicking the same panel, close it
+    set({ activePanel: current === panel ? null : panel });
     get().save();
   },
 
   setAll: (settings) => {
-    set(settings);
+    // Map legacy showOutline to activePanel for backwards compatibility
+    const mapped = { ...settings } as Record<string, unknown>;
+    if ("showOutline" in mapped) {
+      if (mapped.showOutline && !mapped.activePanel) {
+        mapped.activePanel = "outline";
+      }
+      delete mapped.showOutline;
+    }
+    set(mapped as Partial<SettingsState>);
   },
 
   save: async () => {
@@ -152,7 +158,7 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
           autoSave: state.autoSave,
           autoSaveDelay: state.autoSaveDelay,
           spellCheck: state.spellCheck,
-          showOutline: state.showOutline,
+          showOutline: state.activePanel === "outline",
         },
       });
     } catch (error) {

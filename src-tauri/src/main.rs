@@ -1,15 +1,20 @@
 // Prevents additional console window on Windows in release, DO NOT REMOVE!!
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
+mod bibliography;
 mod commands;
 mod formulas;
 mod recent_files;
 mod settings;
+mod versions;
 
+use bibliography::*;
 use commands::*;
 use formulas::FormulaManager;
 use recent_files::RecentFilesManager;
 use settings::SettingsManager;
+use versions::*;
+use std::path::PathBuf;
 use std::sync::Mutex;
 use tauri::Manager;
 
@@ -17,6 +22,7 @@ pub struct AppState {
     pub recent_files: Mutex<RecentFilesManager>,
     pub settings: Mutex<SettingsManager>,
     pub formulas: Mutex<FormulaManager>,
+    pub app_data_dir: Mutex<PathBuf>,
 }
 
 fn main() {
@@ -38,6 +44,7 @@ fn main() {
                 recent_files: Mutex::new(recent_files),
                 settings: Mutex::new(settings),
                 formulas: Mutex::new(formulas),
+                app_data_dir: Mutex::new(app_dir.clone()),
             });
 
             Ok(())
@@ -70,6 +77,16 @@ fn main() {
             delete_formula,
             toggle_formula_favorite,
             increment_formula_usage,
+            // Bibliography
+            read_bib_file,
+            write_bib_file,
+            lookup_doi,
+            lookup_isbn,
+            // Version history
+            create_version,
+            list_versions,
+            restore_version,
+            delete_version,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

@@ -6,6 +6,9 @@ import { Preview } from "./components/Preview";
 import { StatusBar } from "./components/StatusBar";
 import { Toolbar } from "./components/Toolbar";
 import { OutlinePanel } from "./components/OutlinePanel";
+import { ActivityBar } from "./components/ActivityBar";
+import { BibliographyPanel } from "./components/BibliographyPanel";
+import { VersionHistoryPanel } from "./components/VersionHistoryPanel";
 import { Toaster } from "./components/ui/Toaster";
 import { SettingsDialog } from "./components/SettingsDialog";
 import { FindReplaceDialog } from "./components/FindReplaceDialog";
@@ -24,7 +27,7 @@ import { useImageDrop } from "./hooks/useImageDrop";
 import { initSpellChecker } from "./lib/spell-checker";
 
 function App() {
-  const { theme, showOutline } = useSettingsStore();
+  const { theme, activePanel } = useSettingsStore();
   const { loadSettings } = useAppStore();
 
   // Initialize keyboard shortcuts
@@ -50,6 +53,8 @@ function App() {
     document.documentElement.classList.toggle("dark", theme === "dark");
   }, [theme]);
 
+  const hasSidePanel = activePanel !== null;
+
   return (
     <div className="h-screen flex flex-col bg-background text-foreground overflow-hidden">
       {/* Menu Bar + Presence */}
@@ -62,14 +67,20 @@ function App() {
       <Toolbar />
 
       {/* Main Content */}
-      <div className="flex-1 overflow-hidden">
-        <PanelGroup direction="horizontal" className="h-full">
-          {/* Outline Panel (collapsible) */}
-          {showOutline && (
+      <div className="flex-1 overflow-hidden flex">
+        {/* Activity Bar */}
+        <ActivityBar />
+
+        {/* Panels */}
+        <PanelGroup direction="horizontal" className="flex-1">
+          {/* Side Panel (collapsible) */}
+          {hasSidePanel && (
             <>
-              <Panel defaultSize={15} minSize={10} maxSize={25}>
+              <Panel defaultSize={18} minSize={12} maxSize={30}>
                 <div className="h-full border-r bg-muted/20">
-                  <OutlinePanel />
+                  {activePanel === "outline" && <OutlinePanel />}
+                  {activePanel === "bibliography" && <BibliographyPanel />}
+                  {activePanel === "history" && <VersionHistoryPanel />}
                 </div>
               </Panel>
               <PanelResizeHandle className="w-1 bg-border hover:bg-primary/50 transition-colors cursor-col-resize" />
@@ -77,7 +88,7 @@ function App() {
           )}
 
           {/* Editor Panel */}
-          <Panel defaultSize={showOutline ? 42 : 50} minSize={30}>
+          <Panel defaultSize={hasSidePanel ? 40 : 50} minSize={30}>
             <Editor />
           </Panel>
 
@@ -85,7 +96,7 @@ function App() {
           <PanelResizeHandle className="w-1 bg-border hover:bg-primary/50 transition-colors cursor-col-resize" />
 
           {/* Preview Panel */}
-          <Panel defaultSize={showOutline ? 43 : 50} minSize={30}>
+          <Panel defaultSize={hasSidePanel ? 42 : 50} minSize={30}>
             <Preview />
           </Panel>
         </PanelGroup>
