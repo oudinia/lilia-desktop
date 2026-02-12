@@ -1,21 +1,24 @@
 import { useEffect } from "react";
-import { listen } from "@tauri-apps/api/event";
+import { getCurrentWebviewWindow } from "@tauri-apps/api/webviewWindow";
 import { useAppStore } from "@/store/app-store";
 
 export function useFileDrop() {
   const { openFile, showToast } = useAppStore();
 
   useEffect(() => {
-    // Listen for file drop events from Tauri
-    const unlisten = listen<string[]>("tauri://file-drop", async (event) => {
-      const files = event.payload;
-      if (files.length > 0) {
-        const file = files[0];
-        // Check if it's an LML file
-        if (file.endsWith(".lml")) {
-          await openFile(file);
-        } else {
-          showToast("Please drop an .lml file", "error");
+    const appWindow = getCurrentWebviewWindow();
+
+    // Listen for drag-drop events from Tauri v2
+    const unlisten = appWindow.onDragDropEvent(async (event) => {
+      if (event.payload.type === "drop") {
+        const paths = event.payload.paths;
+        if (paths.length > 0) {
+          const file = paths[0];
+          if (file.endsWith(".lml")) {
+            await openFile(file);
+          } else {
+            showToast("Please drop an .lml file", "error");
+          }
         }
       }
     });

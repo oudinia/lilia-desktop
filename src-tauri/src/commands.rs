@@ -14,7 +14,7 @@ pub struct FileInfo {
     pub created: Option<String>,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct WindowState {
     pub width: u32,
     pub height: u32,

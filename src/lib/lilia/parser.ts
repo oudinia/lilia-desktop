@@ -124,8 +124,6 @@ function parseSectionsAndBlocks(
   const blockPattern = /@(\w+)(?:\s+#([\w-]+))?(?:\s+"([^"]*)")?(?:\s+(\w+))?\s*\{([\s\S]*?)\}(?=\s*@|\s*$)/g;
 
   let match: RegExpExecArray | null;
-  let lastIndex = 0;
-
   // First, find any plain text before the first block (becomes paragraph)
   const firstBlockMatch = content.match(/@\w+/);
   if (firstBlockMatch && firstBlockMatch.index && firstBlockMatch.index > 0) {
@@ -136,7 +134,7 @@ function parseSectionsAndBlocks(
   }
 
   while ((match = blockPattern.exec(content)) !== null) {
-    const [fullMatch, blockType, label, title, modifier, innerContent] = match;
+    const [, blockType, label, title, modifier, innerContent] = match;
 
     switch (blockType) {
       case "section":
@@ -193,7 +191,6 @@ function parseSectionsAndBlocks(
         break;
     }
 
-    lastIndex = match.index + fullMatch.length;
   }
 }
 

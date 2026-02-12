@@ -135,7 +135,6 @@ class LaTeXParser {
   private blocks: Block[] = [];
   private errors: ParseError[] = [];
   private warnings: string[] = [];
-  private currentLine = 1;
   private blockCounter = 0;
 
   // Document metadata

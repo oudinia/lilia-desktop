@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import { invoke } from "@tauri-apps/api/tauri";
+import { invoke } from "@tauri-apps/api/core";
 import { Formula, CreateFormula, UpdateFormula } from "@/types/formula";
 
 type ViewMode = "browse" | "create" | "edit";

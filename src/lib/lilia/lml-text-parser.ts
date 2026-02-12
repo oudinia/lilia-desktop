@@ -16,7 +16,6 @@ import type {
   LiliaDocument,
   LiliaDocumentData,
   BibEntry,
-  SectionBlock,
   ParagraphBlock,
   HeadingBlock,
   EquationBlock,
@@ -101,7 +100,7 @@ export function parseLmlTextWithErrors(source: string): ParseResult & { errors: 
  * language: en
  * paperSize: a4
  */
-function parseDocumentHeader(source: string, context: ParseContext): LiliaDocument {
+function parseDocumentHeader(source: string, _context: ParseContext): LiliaDocument {
   const defaults: LiliaDocument = {
     id: generateId(),
     title: "Untitled Document",
@@ -764,7 +763,7 @@ function createHrBlock(context: ParseContext): HrBlock {
  * title: Quantum Computation
  * year: 2000
  */
-function parseBibliography(source: string, context: ParseContext): BibEntry[] {
+function parseBibliography(source: string, _context: ParseContext): BibEntry[] {
   const entries: BibEntry[] = [];
 
   // Find @bibliography section

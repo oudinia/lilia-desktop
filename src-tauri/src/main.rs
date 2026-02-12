@@ -16,7 +16,6 @@ use settings::SettingsManager;
 use versions::*;
 use std::path::PathBuf;
 use std::sync::Mutex;
-use tauri::Manager;
 
 pub struct AppState {
     pub recent_files: Mutex<RecentFilesManager>,
@@ -27,9 +26,15 @@ pub struct AppState {
 
 fn main() {
     tauri::Builder::default()
+        .plugin(tauri_plugin_dialog::init())
+        .plugin(tauri_plugin_fs::init())
+        .plugin(tauri_plugin_shell::init())
+        .plugin(tauri_plugin_global_shortcut::Builder::new().build())
         .setup(|app| {
+            use tauri::Manager;
+
             let app_dir = app
-                .path_resolver()
+                .path()
                 .app_data_dir()
                 .expect("Failed to get app data dir");
 

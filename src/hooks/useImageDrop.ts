@@ -1,5 +1,5 @@
 import { useEffect, useCallback, useState } from "react";
-import { invoke } from "@tauri-apps/api/tauri";
+import { invoke } from "@tauri-apps/api/core";
 import { useAppStore } from "@/store/app-store";
 import { insertTextAtCursor } from "@/components/Editor";
 
