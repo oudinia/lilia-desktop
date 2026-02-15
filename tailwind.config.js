@@ -13,6 +13,9 @@ export default {
         primary: {
           DEFAULT: "hsl(var(--primary))",
           foreground: "hsl(var(--primary-foreground))",
+          deep: "var(--ecme-primary-deep)",
+          mild: "var(--ecme-primary-mild)",
+          subtle: "var(--ecme-primary-subtle)",
         },
         secondary: {
           DEFAULT: "hsl(var(--secondary))",
@@ -37,6 +40,35 @@ export default {
         card: {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
+        },
+        error: {
+          DEFAULT: "var(--error)",
+          subtle: "var(--error-subtle)",
+        },
+        success: {
+          DEFAULT: "var(--success)",
+          subtle: "var(--success-subtle)",
+        },
+        warning: {
+          DEFAULT: "var(--warning)",
+          subtle: "var(--warning-subtle)",
+        },
+        info: {
+          DEFAULT: "var(--info)",
+          subtle: "var(--info-subtle)",
+        },
+        gray: {
+          50: "var(--gray-50)",
+          100: "var(--gray-100)",
+          200: "var(--gray-200)",
+          300: "var(--gray-300)",
+          400: "var(--gray-400)",
+          500: "var(--gray-500)",
+          600: "var(--gray-600)",
+          700: "var(--gray-700)",
+          800: "var(--gray-800)",
+          900: "var(--gray-900)",
+          950: "var(--gray-950)",
         },
       },
       borderRadius: {
