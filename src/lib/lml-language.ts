@@ -94,15 +94,15 @@ export function registerLmlLanguage(monaco: Monaco) {
     tokenizer: {
       root: [
         // Document header
-        [/@document/, "keyword"],
+        [/[@]document/, "keyword"],
 
         // Raw LaTeX passthrough block
-        [/@latex/, "keyword.latex-block", "@latexBlock"],
-        [/@endlatex/, "keyword.latex-block"],
+        [/[@]latex/, "keyword.latex-block", "@latexBlock"],
+        [/[@]endlatex/, "keyword.latex-block"],
 
         // Block markers with parameters
         [
-          /@(equation|figure|code|table|list|abstract|definition|theorem|proof|lemma|proposition|corollary|remark|example|bib|lorem)/,
+          /[@](equation|figure|code|table|list|abstract|definition|theorem|proof|lemma|proposition|corollary|remark|example|bib|lorem)/,
           "keyword",
         ],
 
@@ -167,7 +167,7 @@ export function registerLmlLanguage(monaco: Monaco) {
 
       // Raw LaTeX block - everything until @endlatex is passed through
       latexBlock: [
-        [/@endlatex/, "keyword.latex-block", "@pop"],
+        [/[@]endlatex/, "keyword.latex-block", "@pop"],
         [/.*$/, "string.latex-raw"],
       ],
 
